@@ -1,11 +1,10 @@
 {
   "name": "download-base-artifact",
   "version": "1.0.0",
-  "type": "module",
   "description": "Download the base artifact for the current workflow",
   "main": "index.js",
   "scripts": {
-    "build": "microbundle -f es --compress --no-sourcemap --target node -i index.js -o dist/index.js",
+    "build": "microbundle -f cjs --compress --no-sourcemap --target node -i index.js -o dist/index.js",
     "test": "node test/index.js"
   },
   "repository": {

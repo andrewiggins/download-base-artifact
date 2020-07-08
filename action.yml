@@ -7,4 +7,4 @@ inputs:
     default: "World"
 runs:
   using: "node12"
-  main: "dist/index.esm.js"
+  main: "dist/index.js"
