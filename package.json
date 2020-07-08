@@ -1,0 +1,26 @@
+{
+  "name": "download-base-artifact",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Download the base artifact for the current workflow",
+  "main": "index.js",
+  "scripts": {
+    "build": "microbundle -f es --compress --no-sourcemap --target node -i index.js -o dist/index.js",
+    "test": "node test/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrewiggins/download-base-artifact.git"
+  },
+  "author": "Andre Wiggins",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/andrewiggins/download-base-artifact/issues"
+  },
+  "homepage": "https://github.com/andrewiggins/download-base-artifact#readme",
+  "devDependencies": {
+    "@actions/core": "^1.2.4",
+    "@actions/github": "^4.0.0",
+    "microbundle": "^0.12.2"
+  }
+}

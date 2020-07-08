@@ -1,0 +1,10 @@
+name: "Download base artifact"
+description: "Download the base artifact for the current workflow"
+inputs:
+  who-to-greet: # id of input
+    description: "Who to greet"
+    required: true
+    default: "World"
+runs:
+  using: "node14"
+  main: "dist/index.esm.js"
