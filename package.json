@@ -17,9 +17,22 @@
     "url": "https://github.com/andrewiggins/download-base-artifact/issues"
   },
   "homepage": "https://github.com/andrewiggins/download-base-artifact#readme",
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx,yml,json}": [
+      "prettier --write"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run build && git add dist && lint-staged"
+    }
+  },
   "devDependencies": {
     "@actions/core": "^1.2.4",
     "@actions/github": "^4.0.0",
-    "microbundle": "^0.12.2"
+    "husky": "^4.2.5",
+    "lint-staged": "^10.2.11",
+    "microbundle": "^0.12.2",
+    "prettier": "^2.0.5"
   }
 }
