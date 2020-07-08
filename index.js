@@ -2,9 +2,11 @@ import core from "@actions/core";
 import github from "@actions/github";
 
 try {
-  // `who-to-greet` input defined in action metadata file
-  const nameToGreet = core.getInput("who-to-greet");
-  console.log(`Hello ${nameToGreet}!`);
+  const workflow = core.getInput("workflow", { required: false });
+  const artifact = core.getInput("artifact", { required: true });
+  const path = core.getInput("path", { required: false });
+
+  console.log("Options:", { workflow, artifact, path });
 
   // Get the JSON webhook payload for the event that triggered the workflow
   const payload = JSON.stringify(github.context.payload, undefined, 2);

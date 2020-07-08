@@ -1,10 +1,16 @@
 name: "Download base artifact"
 description: "Download the base artifact for the current workflow"
 inputs:
-  who-to-greet: # id of input
-    description: "Who to greet"
+  workflow:
+    description: "The workflow that generates the desired artifact. Defaults to the current workflow."
+    required: false
+    default: null
+  artifact:
+    description: "The name of the artifact to download"
     required: true
-    default: "World"
+  path:
+    description: "The path to download the artifact to. Defaults to the current working directory."
+    required: false
 runs:
   using: "node12"
   main: "dist/index.js"
