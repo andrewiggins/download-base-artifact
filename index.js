@@ -1,16 +1,30 @@
 import core from "@actions/core";
 import github from "@actions/github";
 
-try {
-  const workflow = core.getInput("workflow", { required: false });
-  const artifact = core.getInput("artifact", { required: true });
-  const path = core.getInput("path", { required: false });
-
-  console.log("Options:", { workflow, artifact, path });
-
-  // Get the JSON webhook payload for the event that triggered the workflow
-  const payload = JSON.stringify(github.context.payload, undefined, 2);
-  console.log(`The event payload: ${payload}`);
-} catch (error) {
-  core.setFailed(error.message);
+/**
+ * @param {GitHubClient} octokit
+ * @param {GitHubContext} context
+ * @param {Inputs} inputs
+ */
+async function run(octokit, context, inputs) {
+  console.log("Inputs:", inputs);
+  console.log("Context:", JSON.stringify(context, undefined, 2));
 }
+
+(async () => {
+  try {
+    const token = core.getInput("github_token", { required: true });
+    const workflow = core.getInput("workflow", { required: false });
+    const artifact = core.getInput("artifact", { required: true });
+    const path = core.getInput("path", { required: false });
+
+    const octokit = github.getOctokit(token);
+    await run(octokit, github.context, {
+      workflow,
+      artifact,
+      path,
+    });
+  } catch (e) {
+    core.setFailed(e.message);
+  }
+})();
