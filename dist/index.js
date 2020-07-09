@@ -7969,30 +7969,40 @@ const {
 	getArtifact: getArtifact$1,
 } = lib;
 
-/**
- * @param {GitHubClient} octokit
- * @param {GitHubContext} context
- * @param {Inputs} inputs
- */
-async function run(octokit, context, inputs) {
-	core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
-	core.debug("Context: " + JSON.stringify(context, undefined, 2));
+const defaultLogger = {
+	warn(getMsg) {
+		console.warn(getMsg);
+	},
+	info(getMsg) {
+		console.log(getMsg);
+	},
+	debug() {},
+};
 
+/**
+ * @typedef {ReturnType<typeof github.getOctokit>} GitHubActionClient
+ * @typedef {{ workflow?: string; artifact: string; path?: string; }} Inputs
+ * @typedef {{ warn(msg: string): void; info(msg: string): void; debug(getMsg: () => string): void; }} Logger
+ *
+ * @param {GitHubActionClient} octokit
+ * @param {typeof github.context} context
+ * @param {Inputs} inputs
+ * @param {Logger} [log]
+ */
+async function run(octokit, context, inputs, log = defaultLogger) {
 	// 1. Determine workflow
 	/** @type {WorkflowData} */
 	let workflow;
 	if (inputs.workflow) {
-		core.info(`Trying to get workflow from given file: ${inputs.workflow}...`);
+		log.info(`Trying to get workflow matching "${inputs.workflow}"...`);
 		workflow = await getWorkflowFromFile$1(octokit, context, inputs.workflow);
 	} else {
-		core.info(
-			`Trying to get workflow from current workflow run (id: ${context.runId})...`
-		);
+		log.info(`Trying to get workflow of current run (id: ${context.runId})...`);
 		workflow = await getWorkflowFromRunId$1(octokit, context, context.runId);
 	}
 
-	core.debug(`Workflow: ${JSON.stringify(workflow, null, 2)}`);
-	core.info(`Resolved to workflow "${workflow.name}" (id: ${workflow.id})`);
+	log.debug(() => `Workflow: ${JSON.stringify(workflow, null, 2)}`);
+	log.info(`Resolved to "${workflow.name}" (id: ${workflow.id})`);
 
 	// 2. Determine base commit
 	let baseCommit, baseRef;
@@ -8000,14 +8010,14 @@ async function run(octokit, context, inputs) {
 		baseCommit = context.payload.before;
 		baseRef = context.payload.ref;
 
-		core.info(`Ref of push is ${baseRef}`);
-		core.info(`Previous commit before push is ${baseCommit}`);
+		log.info(`Ref of push is ${baseRef}`);
+		log.info(`Previous commit before push is ${baseCommit}`);
 	} else if (context.eventName == "pull_request") {
 		baseCommit = context.payload.pull_request.base.sha;
 		baseRef = context.payload.pull_request.base.ref;
 
-		core.info(`Base ref of pull request is ${baseRef}`);
-		core.info(`Base commit of pull request is ${baseCommit}`);
+		log.info(`Base ref of pull request is ${baseRef}`);
+		log.info(`Base commit of pull request is ${baseCommit}`);
 	} else {
 		throw new Error(
 			`Unsupported eventName in github.context: ${context.eventName}`
@@ -8023,8 +8033,8 @@ async function run(octokit, context, inputs) {
 		baseRef
 	);
 
-	core.debug(`Commit Run: ${JSON.stringify(commitRun, null, 2)}`);
-	core.debug(`LKG Run: ${JSON.stringify(lkgRun, null, 2)}`);
+	log.debug(() => `Commit Run: ${JSON.stringify(commitRun, null, 2)}`);
+	log.debug(() => `LKG Run: ${JSON.stringify(lkgRun, null, 2)}`);
 
 	let workflowRun,
 		warningMessage = "";
@@ -8046,7 +8056,7 @@ async function run(octokit, context, inputs) {
 	}
 
 	if (warningMessage !== "") {
-		core.warning(warningMessage);
+		log.warn(warningMessage);
 	}
 
 	if (!workflowRun) {
@@ -8060,7 +8070,7 @@ async function run(octokit, context, inputs) {
 	}
 
 	const workflowRunName = `${workflow.name}#${workflowRun.run_number}`;
-	core.info(
+	log.info(
 		`Using ${workflowRunName} (id: ${workflowRun.id}) as base workflow run`
 	);
 
@@ -8072,8 +8082,8 @@ async function run(octokit, context, inputs) {
 		inputs.artifact
 	);
 
-	core.debug("Artifact: " + JSON.stringify(artifact, null, 2));
-	core.info(`Located artifact "${artifact.name}" (id: ${artifact.id})`);
+	log.debug(() => "Artifact: " + JSON.stringify(artifact, null, 2));
+	log.info(`Located artifact "${artifact.name}" (id: ${artifact.id})`);
 
 	if (artifact.expired) {
 		throw new Error(
@@ -8088,19 +8098,19 @@ async function run(octokit, context, inputs) {
 	await mkdir(inputs.path, { recursive: true });
 
 	const size = prettyBytes(artifact.size_in_bytes);
-	core.info(`Downloading artifact ${artifact.name}.zip (${size})...`);
+	log.info(`Downloading artifact ${artifact.name}.zip (${size})...`);
 	const zip = await octokit.actions.downloadArtifact({
 		...context.repo,
 		artifact_id: artifact.id,
 		archive_format: "zip",
 	});
 
-	core.info(`Extracting ${artifact.name}.zip...`);
+	log.info(`Extracting ${artifact.name}.zip...`);
 	const adm = new admZip(Buffer.from(zip.data));
 	adm.getEntries().forEach((entry) => {
 		const action = entry.isDirectory ? "creating" : "inflating";
 		const filepath = path.join(inputs.path, entry.entryName);
-		core.info(`  ${action}: ${filepath}`);
+		log.info(`  ${action}: ${filepath}`);
 	});
 
 	adm.extractAllTo(inputs.path, true);
@@ -8114,11 +8124,24 @@ async function run(octokit, context, inputs) {
 		const path = core.getInput("path", { required: false });
 
 		const octokit = github.getOctokit(token);
-		await run(octokit, github.context, {
-			workflow,
-			artifact,
-			path,
-		});
+		const inputs = { workflow, artifact, path };
+
+		core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
+		core.debug("Context: " + JSON.stringify(github.context, undefined, 2));
+
+		const actionLogger = {
+			warn(msg) {
+				core.warning(msg);
+			},
+			info(msg) {
+				core.info(msg);
+			},
+			debug(getMsg) {
+				core.debug(getMsg());
+			},
+		};
+
+		await run(octokit, github.context, inputs, actionLogger);
 	} catch (e) {
 		core.setFailed(e.message);
 	}
