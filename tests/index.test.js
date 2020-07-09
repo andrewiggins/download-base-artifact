@@ -1,7 +1,7 @@
 import test from "tape";
 import {
-	getWorkflowIdFromFile,
-	getWorkflowIdFromRunId,
+	getWorkflowFromFile,
+	getWorkflowFromRunId,
 	getWorkflowRunForCommit,
 } from "../lib/index.js";
 import { getTestClient } from "./utils.js";
@@ -16,14 +16,19 @@ const testContext = {
 
 const testClient = getTestClient();
 
-test("getWorkflowIdFromFile", async (t) => {
-	const id = await getWorkflowIdFromFile(testClient, testContext, "main.yml");
-	t.equal(id, 1827281, "Correct workflow ID is returned");
+test("getWorkflowFromFile", async (t) => {
+	const workflow = await getWorkflowFromFile(
+		testClient,
+		testContext,
+		"main.yml"
+	);
+
+	t.equal(workflow.id, 1827281, "Correct workflow ID is returned");
 });
 
-test("getWorkflowIdFromFile NotFound", async (t) => {
+test("getWorkflowFromFile NotFound", async (t) => {
 	try {
-		await getWorkflowIdFromFile(testClient, testContext, "failure");
+		await getWorkflowFromFile(testClient, testContext, "failure");
 		t.fail("Do not throw expected error.");
 	} catch (e) {
 		t.match(
@@ -34,9 +39,14 @@ test("getWorkflowIdFromFile NotFound", async (t) => {
 	}
 });
 
-test("getWorkflowIdFromRunId", async (t) => {
-	const id = await getWorkflowIdFromRunId(testClient, testContext, 162490580);
-	t.equal(id, 1827281, "Correct workflow ID is returned");
+test("getWorkflowFromRunId", async (t) => {
+	const workflow = await getWorkflowFromRunId(
+		testClient,
+		testContext,
+		162490580
+	);
+
+	t.equal(workflow.id, 1827281, "Correct workflow ID is returned");
 });
 
 test("getWorkflowRunForCommit for push", async (t) => {

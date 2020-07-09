@@ -5498,24 +5498,34 @@ var github$1 = /*@__PURE__*/unwrapExports(github);
  * @param {GitHubClient} client
  * @param {GitHubContext} context
  * @param {number} run_id
+ * @returns {Promise<WorkflowData>}
  */
-async function getWorkflowIdFromRunId(client, context, run_id) {
-	const res = await client.actions.getWorkflowRun({ ...context.repo, run_id });
-	return res.data.workflow_id;
+async function getWorkflowFromRunId(client, context, run_id) {
+	const runResponse = await client.actions.getWorkflowRun({
+		...context.repo,
+		run_id,
+	});
+
+	const workflowRes = await client.request({
+		url: runResponse.data.workflow_url,
+	});
+
+	return workflowRes.data;
 }
 
 /**
  * @param {GitHubClient} client
  * @param {GitHubContext} context
  * @param {string} file
+ * @returns {Promise<WorkflowData>}
  */
-async function getWorkflowIdFromFile(client, context, file) {
+async function getWorkflowFromFile(client, context, file) {
 	try {
 		const res = await client.actions.getWorkflow({
 			...context.repo,
 			workflow_id: file,
 		});
-		return res.data.id;
+		return res.data;
 	} catch (e) {
 		if (e.status == 404) {
 			throw new Error(
@@ -5582,20 +5592,18 @@ async function run(octokit, context, inputs) {
 	core$1.debug("Context: " + JSON.stringify(context, undefined, 2));
 
 	// 1. Determine workflow
-	/** @type {number} */
-	let workflowId;
+	/** @type {WorkflowData} */
+	let workflow;
 	if (inputs.workflow) {
-		core$1.info(
-			`Trying to get workflow ID from given file: ${inputs.workflow}...`
-		);
-		workflowId = await getWorkflowIdFromFile(octokit, context, inputs.workflow);
+		core$1.info(`Trying to get workflow from given file: ${inputs.workflow}...`);
+		workflow = await getWorkflowFromFile(octokit, context, inputs.workflow);
 	} else {
 		core$1.info(
-			`Trying to get workflow ID from current workflow run: ${context.runId}...`
+			`Trying to get workflow from current workflow run: ${context.runId}...`
 		);
-		workflowId = await getWorkflowIdFromRunId(octokit, context, context.runId);
+		workflow = await getWorkflowFromRunId(octokit, context, context.runId);
 	}
-	core$1.info(`Resolved to workflow ID: ${workflowId}`);
+	core$1.info(`Resolved to workflow "${workflow.name}" (id: ${workflow.id}).`);
 
 	// 2. Determine base commit
 	/** @type {string} */
@@ -5618,17 +5626,24 @@ async function run(octokit, context, inputs) {
 	const workflowRun = await getWorkflowRunForCommit(
 		octokit,
 		context.repo,
-		workflowId,
+		workflow.id,
 		baseCommit,
 		baseRef
 	);
 
 	if (!workflowRun) {
-		const params = JSON.stringify({ workflowId, baseCommit, baseRef });
-		throw new Error(`Could not find workflow run for ${params}`);
+		const params = JSON.stringify({
+			workflowId: workflow.id,
+			baseCommit,
+			baseRef,
+			status: "success",
+		});
+		throw new Error(`Could not find workflow run matching ${params}`);
 	}
 
-	core$1.info(`Base workflow run id: ${workflowRun.id}`);
+	core$1.info(
+		`Base workflow run: ${workflow.name}#${workflowRun.run_number} (id: ${workflowRun.id}).`
+	);
 
 	// 4. Download artifact for base workflow
 }

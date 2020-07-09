@@ -1,6 +1,7 @@
 import github from "@actions/github";
 import {
 	OctokitResponse,
+	ActionsGetWorkflowResponseData,
 	ActionsGetWorkflowRunResponseData,
 } from "@octokit/types";
 
@@ -9,6 +10,7 @@ declare global {
 	type GitHubContext = typeof github.context;
 	type GitHubRepo = GitHubContext["repo"];
 
+	type WorkflowData = ActionsGetWorkflowResponseData;
 	type WorkflowRunData = ActionsGetWorkflowRunResponseData;
 	type WorkflowRunsAsyncIterator = AsyncIterableIterator<
 		OctokitResponse<WorkflowRunData[]>

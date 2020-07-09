@@ -1,8 +1,8 @@
 import core from "@actions/core";
 import github from "@actions/github";
 import {
-	getWorkflowIdFromFile,
-	getWorkflowIdFromRunId,
+	getWorkflowFromFile,
+	getWorkflowFromRunId,
 	getWorkflowRunForCommit,
 } from "./lib";
 
@@ -16,20 +16,18 @@ async function run(octokit, context, inputs) {
 	core.debug("Context: " + JSON.stringify(context, undefined, 2));
 
 	// 1. Determine workflow
-	/** @type {number} */
-	let workflowId;
+	/** @type {WorkflowData} */
+	let workflow;
 	if (inputs.workflow) {
-		core.info(
-			`Trying to get workflow ID from given file: ${inputs.workflow}...`
-		);
-		workflowId = await getWorkflowIdFromFile(octokit, context, inputs.workflow);
+		core.info(`Trying to get workflow from given file: ${inputs.workflow}...`);
+		workflow = await getWorkflowFromFile(octokit, context, inputs.workflow);
 	} else {
 		core.info(
-			`Trying to get workflow ID from current workflow run: ${context.runId}...`
+			`Trying to get workflow from current workflow run: ${context.runId}...`
 		);
-		workflowId = await getWorkflowIdFromRunId(octokit, context, context.runId);
+		workflow = await getWorkflowFromRunId(octokit, context, context.runId);
 	}
-	core.info(`Resolved to workflow ID: ${workflowId}`);
+	core.info(`Resolved to workflow "${workflow.name}" (id: ${workflow.id}).`);
 
 	// 2. Determine base commit
 	/** @type {string} */
@@ -52,17 +50,24 @@ async function run(octokit, context, inputs) {
 	const workflowRun = await getWorkflowRunForCommit(
 		octokit,
 		context.repo,
-		workflowId,
+		workflow.id,
 		baseCommit,
 		baseRef
 	);
 
 	if (!workflowRun) {
-		const params = JSON.stringify({ workflowId, baseCommit, baseRef });
-		throw new Error(`Could not find workflow run for ${params}`);
+		const params = JSON.stringify({
+			workflowId: workflow.id,
+			baseCommit,
+			baseRef,
+			status: "success",
+		});
+		throw new Error(`Could not find workflow run matching ${params}`);
 	}
 
-	core.info(`Base workflow run id: ${workflowRun.id}`);
+	core.info(
+		`Base workflow run: ${workflow.name}#${workflowRun.run_number} (id: ${workflowRun.id}).`
+	);
 
 	// 4. Download artifact for base workflow
 }
