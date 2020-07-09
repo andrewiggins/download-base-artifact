@@ -17,8 +17,6 @@ const {
  * @param {Inputs} inputs
  */
 async function run(octokit, context, inputs) {
-	throw new Error("test error");
-
 	core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
 	core.debug("Context: " + JSON.stringify(context, undefined, 2));
 
