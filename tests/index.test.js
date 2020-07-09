@@ -50,30 +50,8 @@ test("getWorkflowFromRunId", async (t) => {
 	t.equal(workflow.id, 1827281, "Correct workflow ID is returned");
 });
 
-test("getWorkflowRunForCommit for push", async (t) => {
-	const res = await getWorkflowRunForCommit(
-		testClient,
-		testContext.repo,
-		1827281,
-		"8c81cadeed9dfc5a2ae8555046b323bf3be712ce"
-	);
-
-	t.equal(res.id, 162658683, "Correct run ID is returned");
-});
-
-test.skip("getWorkflowRunForCommit for pull_request", async (t) => {
-	const res = await getWorkflowRunForCommit(
-		testClient,
-		testContext.repo,
-		1827281,
-		""
-	);
-
-	t.equal(res.id, 162658683, "Correct run ID is returned");
-});
-
-test("getWorkflowRunForCommit with baseRef", async (t) => {
-	const res = await getWorkflowRunForCommit(
+test("getWorkflowRunForCommit for push commit run", async (t) => {
+	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
 		testContext.repo,
 		1827281,
@@ -81,11 +59,25 @@ test("getWorkflowRunForCommit with baseRef", async (t) => {
 		"refs/heads/master"
 	);
 
-	t.equal(res.id, 162658683, "Correct run ID is returned");
+	t.equal(commitRun.id, 162658683, "Correct run ID is returned");
+	t.ok(lkgRun, "Returns a valid lkg run");
+});
+
+test("getWorkflowRunForCommit for pull_request commit run (e.g. PR into PR)", async (t) => {
+	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
+		testClient,
+		testContext.repo,
+		1827281,
+		"4f7618a381231923ebd37932ce43f588b74d3eb0",
+		"get-workflow-run"
+	);
+
+	t.equal(commitRun.id, 163536999, "Correct run ID is returned");
+	t.ok(lkgRun, "Returns a valid lkg run");
 });
 
 test("getWorkflowRunForCommit with bad ref", async (t) => {
-	const res = await getWorkflowRunForCommit(
+	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
 		testContext.repo,
 		1827281,
@@ -93,18 +85,21 @@ test("getWorkflowRunForCommit with bad ref", async (t) => {
 		"refs/heads/fake-branch"
 	);
 
-	t.equal(res, undefined, "Returns undefined if not found on branch");
+	t.notOk(commitRun, "Returns undefined for commitRun if ref doesn't exist");
+	t.notOk(lkgRun, "Returns undefined for lkgRun if ref doesn't exist");
 });
 
 test("getWorkflowRunForCommit with unknown commit", async (t) => {
-	const res = await getWorkflowRunForCommit(
+	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
 		testContext.repo,
 		1827281,
-		"9c81cadeed9dfc5a2ae8555046b323bf3be712cf"
+		"9c81cadeed9dfc5a2ae8555046b323bf3be712cf",
+		"refs/heads/master"
 	);
 
-	t.equal(res, undefined, "Returns undefined if not found on branch");
+	t.notOk(commitRun, "Returns undefined if not found on branch");
+	t.ok(lkgRun, "Returns LKG run event if commit can't be found");
 });
 
 test("getArtifact", async (t) => {

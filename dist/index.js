@@ -7870,18 +7870,18 @@ async function getWorkflowFromFile(client, context, file) {
 /**
  * @param {GitHubClient} client
  * @param {GitHubRepo} repo
- * @param {number} workflow_id
- * @param {string} commit
- * @param {string} [ref]
- * @returns {Promise<WorkflowRunData | undefined>}
+ * @param {number} workflow_id The ID of the workflow whose runs to search
+ * @param {string} commit Commit to look for a workflow run
+ * @param {string} ref Branch commit should be found on
+ * @returns {Promise<[WorkflowRunData | undefined, WorkflowRunData]>}
  */
 async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
 	/** @type {WorkflowRunData} */
-	let run;
+	let runForCommit, lkgRun;
 
 	// https://docs.github.com/en/rest/reference/actions#list-workflow-runs
 	/** @type {Record<string, string | number>} */
-	const params = { ...repo, workflow_id, status: "success" };
+	const params = { ...repo, workflow_id };
 	if (ref) {
 		params.branch = ref.replace(/^refs\/heads\//, "");
 	}
@@ -7890,20 +7890,30 @@ async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
 
 	/** @type {WorkflowRunsAsyncIterator} */
 	const iterator = client.paginate.iterator(endpoint);
-	for await (const page of iterator) {
+	paging: for await (const page of iterator) {
 		if (page.status > 299) {
 			throw new Error(
 				`Non-success error code returned for workflow runs: ${page.status}`
 			);
 		}
 
-		run = page.data.find((run) => run.head_sha == commit);
-		if (run) {
-			break;
+		for (let run of page.data) {
+			// Get the last successful workflow run for the base ref
+			if (lkgRun == null && run.conclusion == "success") {
+				lkgRun = run;
+			}
+
+			if (runForCommit == null && run.head_sha == commit) {
+				runForCommit = run;
+			}
+
+			if (runForCommit && lkgRun) {
+				break paging;
+			}
 		}
 	}
 
-	return run;
+	return [runForCommit, lkgRun];
 }
 
 /**
@@ -7985,7 +7995,6 @@ async function run(octokit, context, inputs) {
 	core.info(`Resolved to workflow "${workflow.name}" (id: ${workflow.id})`);
 
 	// 2. Determine base commit
-	/** @type {string} */
 	let baseCommit, baseRef;
 	if (context.eventName == "push") {
 		baseCommit = context.payload.before;
@@ -8006,7 +8015,7 @@ async function run(octokit, context, inputs) {
 	}
 
 	// 3. Determine most recent workflow run for commit
-	const workflowRun = await getWorkflowRunForCommit$1(
+	const [commitRun, lkgRun] = await getWorkflowRunForCommit$1(
 		octokit,
 		context.repo,
 		workflow.id,
@@ -8014,7 +8023,22 @@ async function run(octokit, context, inputs) {
 		baseRef
 	);
 
-	core.debug(`Workflow Run: ${JSON.stringify(workflowRun, null, 2)}`);
+	core.debug(`Commit Run: ${JSON.stringify(commitRun, null, 2)}`);
+	core.debug(`LKG Run: ${JSON.stringify(lkgRun, null, 2)}`);
+
+	let workflowRun = commitRun;
+	if (!workflowRun || workflowRun.conclusion !== "success") {
+		core.warning(
+			`Could not find successful workflow run for commit ${baseCommit}`
+		);
+
+		workflowRun = lkgRun;
+		if (workflowRun) {
+			core.info(`Using last successful run on ${baseRef}.`);
+		} else {
+			core.warning(`Could not find successful workflow run for ${baseRef}`);
+		}
+	}
 
 	if (!workflowRun) {
 		const params = JSON.stringify({

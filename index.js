@@ -37,7 +37,6 @@ async function run(octokit, context, inputs) {
 	core.info(`Resolved to workflow "${workflow.name}" (id: ${workflow.id})`);
 
 	// 2. Determine base commit
-	/** @type {string} */
 	let baseCommit, baseRef;
 	if (context.eventName == "push") {
 		baseCommit = context.payload.before;
@@ -58,7 +57,7 @@ async function run(octokit, context, inputs) {
 	}
 
 	// 3. Determine most recent workflow run for commit
-	const workflowRun = await getWorkflowRunForCommit(
+	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		octokit,
 		context.repo,
 		workflow.id,
@@ -66,7 +65,22 @@ async function run(octokit, context, inputs) {
 		baseRef
 	);
 
-	core.debug(`Workflow Run: ${JSON.stringify(workflowRun, null, 2)}`);
+	core.debug(`Commit Run: ${JSON.stringify(commitRun, null, 2)}`);
+	core.debug(`LKG Run: ${JSON.stringify(lkgRun, null, 2)}`);
+
+	let workflowRun = commitRun;
+	if (!workflowRun || workflowRun.conclusion !== "success") {
+		core.warning(
+			`Could not find successful workflow run for commit ${baseCommit}`
+		);
+
+		workflowRun = lkgRun;
+		if (workflowRun) {
+			core.info(`Using last successful run on ${baseRef}.`);
+		} else {
+			core.warning(`Could not find successful workflow run for ${baseRef}`);
+		}
+	}
 
 	if (!workflowRun) {
 		const params = JSON.stringify({
