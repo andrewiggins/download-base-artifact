@@ -3,6 +3,7 @@ import {
 	OctokitResponse,
 	ActionsGetWorkflowResponseData,
 	ActionsGetWorkflowRunResponseData,
+	ActionsGetArtifactResponseData,
 } from "@octokit/types";
 
 declare global {
@@ -12,8 +13,14 @@ declare global {
 
 	type WorkflowData = ActionsGetWorkflowResponseData;
 	type WorkflowRunData = ActionsGetWorkflowRunResponseData;
+	type ArtifactData = ActionsGetArtifactResponseData;
+
 	type WorkflowRunsAsyncIterator = AsyncIterableIterator<
 		OctokitResponse<WorkflowRunData[]>
+	>;
+
+	type ArtifactsAsyncIterator = AsyncIterableIterator<
+		OctokitResponse<ActionsGetArtifactResponseData[]>
 	>;
 
 	interface Inputs {

@@ -3,6 +3,7 @@ const {
 	getWorkflowFromFile,
 	getWorkflowFromRunId,
 	getWorkflowRunForCommit,
+	getArtifact,
 } = require("../lib/index.js");
 const { getTestClient } = require("./utils.js");
 
@@ -104,4 +105,26 @@ test("getWorkflowRunForCommit with unknown commit", async (t) => {
 	);
 
 	t.equal(res, undefined, "Returns undefined if not found on branch");
+});
+
+test("getArtifact", async (t) => {
+	const artifact = await getArtifact(
+		testClient,
+		testContext.repo,
+		163653716,
+		"test-artifact.txt"
+	);
+
+	t.equal(artifact.id, 10721454, "Returns  if not found on branch");
+});
+
+test("getArtifact not found", async (t) => {
+	const artifact = await getArtifact(
+		testClient,
+		testContext.repo,
+		163653716,
+		"not-found.txt"
+	);
+
+	t.equal(artifact, undefined, "Returns undefined if artifact is not found");
 });

@@ -1,9 +1,14 @@
+const path = require("path");
+const { mkdir } = require("fs").promises;
 const core = require("@actions/core");
 const github = require("@actions/github");
+const prettyBytes = require("pretty-bytes");
+const AdmZip = require("adm-zip");
 const {
 	getWorkflowFromFile,
 	getWorkflowFromRunId,
 	getWorkflowRunForCommit,
+	getArtifact,
 } = require("./lib");
 
 /**
@@ -27,7 +32,9 @@ async function run(octokit, context, inputs) {
 		);
 		workflow = await getWorkflowFromRunId(octokit, context, context.runId);
 	}
-	core.info(`Resolved to workflow "${workflow.name}" (id: ${workflow.id}).`);
+
+	core.debug(`Workflow: ${JSON.stringify(workflow, null, 2)}`);
+	core.info(`Resolved to workflow "${workflow.name}" (id: ${workflow.id})`);
 
 	// 2. Determine base commit
 	/** @type {string} */
@@ -36,14 +43,14 @@ async function run(octokit, context, inputs) {
 		baseCommit = context.payload.before;
 		baseRef = context.payload.ref;
 
-		core.info(`Ref of push is ${baseRef}.`);
-		core.info(`Previous commit before push is ${baseCommit}.`);
+		core.info(`Ref of push is ${baseRef}`);
+		core.info(`Previous commit before push is ${baseCommit}`);
 	} else if (context.eventName == "pull_request") {
 		baseCommit = context.payload.pull_request.base.sha;
 		baseRef = context.payload.pull_request.base.ref;
 
-		core.info(`Base ref of pull request is ${baseRef}.`);
-		core.info(`Base commit of pull request is ${baseCommit}.`);
+		core.info(`Base ref of pull request is ${baseRef}`);
+		core.info(`Base commit of pull request is ${baseCommit}`);
 	} else {
 		throw new Error(
 			`Unsupported eventName in github.context: ${context.eventName}`
@@ -59,6 +66,8 @@ async function run(octokit, context, inputs) {
 		baseRef
 	);
 
+	core.debug(`Workflow Run: ${JSON.stringify(workflowRun, null, 2)}`);
+
 	if (!workflowRun) {
 		const params = JSON.stringify({
 			workflowId: workflow.id,
@@ -69,11 +78,49 @@ async function run(octokit, context, inputs) {
 		throw new Error(`Could not find workflow run matching ${params}`);
 	}
 
-	core.info(
-		`Base workflow run: ${workflow.name}#${workflowRun.run_number} (id: ${workflowRun.id}).`
-	);
+	const workflowRunName = `${workflow.name}#${workflowRun.run_number}`;
+	core.info(`Base workflow run: ${workflowRunName} (id: ${workflowRun.id})`);
 
 	// 4. Download artifact for base workflow
+	const artifact = await getArtifact(
+		octokit,
+		context.repo,
+		workflowRun.id,
+		inputs.artifact
+	);
+
+	core.debug("Artifact: " + JSON.stringify(artifact, null, 2));
+	core.info(`Located artifact "${artifact.name}" (id: ${artifact.id})`);
+
+	if (artifact.expired) {
+		throw new Error(
+			`Artifact "${artifact.name}" for workflow run ${workflowRunName} is expired. Please re-run workflow to regenerate artifacts.`
+		);
+	}
+
+	if (!inputs.path) {
+		inputs.path = ".";
+	}
+
+	await mkdir(inputs.path, { recursive: true });
+
+	const size = prettyBytes(artifact.size_in_bytes);
+	core.info(`Downloading artifact ${artifact.name}.zip (${size})...`);
+	const zip = await octokit.actions.downloadArtifact({
+		...context.repo,
+		artifact_id: artifact.id,
+		archive_format: "zip",
+	});
+
+	core.info(`Extracting ${artifact.name}.zip...`);
+	const adm = new AdmZip(Buffer.from(zip.data));
+	adm.getEntries().forEach((entry) => {
+		const action = entry.isDirectory ? "creating" : "inflating";
+		const filepath = path.join(inputs.path, entry.entryName);
+		core.info(`  ${action}: ${filepath}`);
+	});
+
+	adm.extractAllTo(inputs.path, true);
 }
 
 (async () => {

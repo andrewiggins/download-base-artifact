@@ -19,11 +19,14 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: echo "$GITHUB_RUN_NUMBER" > test-artifact.txt
+      - run: ls -al
       - name: Download Base Artifact
         uses: ./
         with:
           artifact: "test-artifact.txt"
           path: base
+      - run: ls -al
+      - run: ls -al base
       - uses: actions/upload-artifact@v2
         with:
           name: test-artifact.txt
