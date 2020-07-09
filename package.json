@@ -2,10 +2,11 @@
   "name": "download-base-artifact",
   "version": "1.0.0",
   "description": "Download the base artifact for the current workflow",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "build": "microbundle -f cjs --compress --no-sourcemap --target node -i index.js -o dist/index.js",
-    "test": "node test/index.js"
+    "test": "node tests/index.test.js"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,7 @@
     "husky": "^4.2.5",
     "lint-staged": "^10.2.11",
     "microbundle": "^0.12.2",
-    "prettier": "^2.0.5"
+    "prettier": "^2.0.5",
+    "tape": "^5.0.1"
   }
 }

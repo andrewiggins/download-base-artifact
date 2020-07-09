@@ -1,13 +1,23 @@
 name: Main
 
-on: [push]
+on:
+  pull_request:
+    branches:
+      - "**"
+  push:
+    branches:
+      - master
 
 jobs:
-  hello_world_job:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "14.x"
+      - run: npm ci
+      - run: npm test
       - name: Download Base Artifact
         uses: ./
         with:
