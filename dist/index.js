@@ -7824,15 +7824,17 @@ var admZip = function (/**String*/input) {
 	}
 };
 
+/** @typedef {{ owner: string; repo: string; }} GitHubRepo */
+
 /**
  * @param {import('../index').GitHubActionClient} client
- * @param {GitHubContext} context
+ * @param {GitHubRepo} repo
  * @param {number} run_id
  * @returns {Promise<WorkflowData>}
  */
-async function getWorkflowFromRunId(client, context, run_id) {
+async function getWorkflowFromRunId(client, repo, run_id) {
 	const runResponse = await client.actions.getWorkflowRun({
-		...context.repo,
+		...repo,
 		run_id,
 	});
 
@@ -7845,14 +7847,14 @@ async function getWorkflowFromRunId(client, context, run_id) {
 
 /**
  * @param {import('../index').GitHubActionClient} client
- * @param {GitHubContext} context
+ * @param {GitHubRepo} repo
  * @param {string} file
  * @returns {Promise<WorkflowData>}
  */
-async function getWorkflowFromFile(client, context, file) {
+async function getWorkflowFromFile(client, repo, file) {
 	try {
 		const res = await client.actions.getWorkflow({
-			...context.repo,
+			...repo,
 			workflow_id: file,
 		});
 		return res.data;
@@ -7990,15 +7992,17 @@ const defaultLogger = {
  * @param {Logger} [log]
  */
 async function run(octokit, context, inputs, log = defaultLogger) {
+	const repo = context.repo;
+
 	// 1. Determine workflow
 	/** @type {WorkflowData} */
 	let workflow;
 	if (inputs.workflow) {
 		log.info(`Trying to get workflow matching "${inputs.workflow}"...`);
-		workflow = await getWorkflowFromFile$1(octokit, context, inputs.workflow);
+		workflow = await getWorkflowFromFile$1(octokit, repo, inputs.workflow);
 	} else {
 		log.info(`Trying to get workflow of current run (id: ${context.runId})...`);
-		workflow = await getWorkflowFromRunId$1(octokit, context, context.runId);
+		workflow = await getWorkflowFromRunId$1(octokit, repo, context.runId);
 	}
 
 	log.debug(() => `Workflow: ${JSON.stringify(workflow, null, 2)}`);
@@ -8027,7 +8031,7 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	// 3. Determine most recent workflow run for commit
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit$1(
 		octokit,
-		context.repo,
+		repo,
 		workflow.id,
 		baseCommit,
 		baseRef
@@ -8077,7 +8081,7 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	// 4. Download artifact for base workflow
 	const artifact = await getArtifact$1(
 		octokit,
-		context.repo,
+		repo,
 		workflowRun.id,
 		inputs.artifact
 	);
@@ -8100,7 +8104,7 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	const size = prettyBytes(artifact.size_in_bytes);
 	log.info(`Downloading artifact ${artifact.name}.zip (${size})...`);
 	const zip = await octokit.actions.downloadArtifact({
-		...context.repo,
+		...repo,
 		artifact_id: artifact.id,
 		archive_format: "zip",
 	});

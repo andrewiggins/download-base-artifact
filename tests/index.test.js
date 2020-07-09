@@ -41,27 +41,21 @@ function getTestClient() {
 
 const testClient = getTestClient();
 
-/** @type {GitHubContext} */
-const testContext = {
-	repo: {
-		owner: "andrewiggins",
-		repo: "download-base-artifact",
-	},
+/** @type {import('../lib/index').GitHubRepo} */
+const testRepo = {
+	owner: "andrewiggins",
+	repo: "download-base-artifact",
 };
 
 test("getWorkflowFromFile", async (t) => {
-	const workflow = await getWorkflowFromFile(
-		testClient,
-		testContext,
-		"main.yml"
-	);
+	const workflow = await getWorkflowFromFile(testClient, testRepo, "main.yml");
 
 	t.equal(workflow.id, 1827281, "Correct workflow ID is returned");
 });
 
 test("getWorkflowFromFile NotFound", async (t) => {
 	try {
-		await getWorkflowFromFile(testClient, testContext, "failure");
+		await getWorkflowFromFile(testClient, testRepo, "failure");
 		t.fail("Do not throw expected error.");
 	} catch (e) {
 		t.match(
@@ -73,11 +67,7 @@ test("getWorkflowFromFile NotFound", async (t) => {
 });
 
 test("getWorkflowFromRunId", async (t) => {
-	const workflow = await getWorkflowFromRunId(
-		testClient,
-		testContext,
-		162490580
-	);
+	const workflow = await getWorkflowFromRunId(testClient, testRepo, 162490580);
 
 	t.equal(workflow.id, 1827281, "Correct workflow ID is returned");
 });
@@ -85,7 +75,7 @@ test("getWorkflowFromRunId", async (t) => {
 test("getWorkflowRunForCommit for push commit run", async (t) => {
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
-		testContext.repo,
+		testRepo,
 		1827281,
 		"8c81cadeed9dfc5a2ae8555046b323bf3be712ce",
 		"refs/heads/master"
@@ -98,7 +88,7 @@ test("getWorkflowRunForCommit for push commit run", async (t) => {
 test("getWorkflowRunForCommit for pull_request commit run (e.g. PR into PR)", async (t) => {
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
-		testContext.repo,
+		testRepo,
 		1827281,
 		"4f7618a381231923ebd37932ce43f588b74d3eb0",
 		"get-workflow-run"
@@ -111,7 +101,7 @@ test("getWorkflowRunForCommit for pull_request commit run (e.g. PR into PR)", as
 test("getWorkflowRunForCommit with bad ref", async (t) => {
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
-		testContext.repo,
+		testRepo,
 		1827281,
 		"8c81cadeed9dfc5a2ae8555046b323bf3be712ce",
 		"refs/heads/fake-branch"
@@ -124,7 +114,7 @@ test("getWorkflowRunForCommit with bad ref", async (t) => {
 test("getWorkflowRunForCommit with unknown commit", async (t) => {
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
-		testContext.repo,
+		testRepo,
 		1827281,
 		"9c81cadeed9dfc5a2ae8555046b323bf3be712cf",
 		"refs/heads/master"
@@ -137,7 +127,7 @@ test("getWorkflowRunForCommit with unknown commit", async (t) => {
 test("getArtifact", async (t) => {
 	const artifact = await getArtifact(
 		testClient,
-		testContext.repo,
+		testRepo,
 		163653716,
 		"test-artifact.txt"
 	);
@@ -148,7 +138,7 @@ test("getArtifact", async (t) => {
 test("getArtifact not found", async (t) => {
 	const artifact = await getArtifact(
 		testClient,
-		testContext.repo,
+		testRepo,
 		163653716,
 		"not-found.txt"
 	);

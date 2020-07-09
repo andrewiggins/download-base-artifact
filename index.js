@@ -32,15 +32,17 @@ const defaultLogger = {
  * @param {Logger} [log]
  */
 async function run(octokit, context, inputs, log = defaultLogger) {
+	const repo = context.repo;
+
 	// 1. Determine workflow
 	/** @type {WorkflowData} */
 	let workflow;
 	if (inputs.workflow) {
 		log.info(`Trying to get workflow matching "${inputs.workflow}"...`);
-		workflow = await getWorkflowFromFile(octokit, context, inputs.workflow);
+		workflow = await getWorkflowFromFile(octokit, repo, inputs.workflow);
 	} else {
 		log.info(`Trying to get workflow of current run (id: ${context.runId})...`);
-		workflow = await getWorkflowFromRunId(octokit, context, context.runId);
+		workflow = await getWorkflowFromRunId(octokit, repo, context.runId);
 	}
 
 	log.debug(() => `Workflow: ${JSON.stringify(workflow, null, 2)}`);
@@ -69,7 +71,7 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	// 3. Determine most recent workflow run for commit
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		octokit,
-		context.repo,
+		repo,
 		workflow.id,
 		baseCommit,
 		baseRef
@@ -119,7 +121,7 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	// 4. Download artifact for base workflow
 	const artifact = await getArtifact(
 		octokit,
-		context.repo,
+		repo,
 		workflowRun.id,
 		inputs.artifact
 	);
@@ -142,7 +144,7 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	const size = prettyBytes(artifact.size_in_bytes);
 	log.info(`Downloading artifact ${artifact.name}.zip (${size})...`);
 	const zip = await octokit.actions.downloadArtifact({
-		...context.repo,
+		...repo,
 		artifact_id: artifact.id,
 		archive_format: "zip",
 	});
