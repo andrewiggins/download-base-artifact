@@ -1,8 +1,8 @@
-import github from "@actions/github";
-import httpClient from "@actions/http-client";
-import octokit from "@octokit/core";
-import endpointPlugin from "@octokit/plugin-rest-endpoint-methods";
-import paginatePlugin from "@octokit/plugin-paginate-rest";
+const github = require("@actions/github");
+const httpClient = require("@actions/http-client");
+const octokit = require("@octokit/core");
+const endpointPlugin = require("@octokit/plugin-rest-endpoint-methods");
+const paginatePlugin = require("@octokit/plugin-paginate-rest");
 
 // Mostly copied from: https://github.com/actions/toolkit/blob/cee7d92d1d02e3107c9b1387b9690b89096b67be/packages/github/src/utils.ts#L12
 // Copied from there to allow for un-authed requests for local testing
@@ -18,7 +18,7 @@ const defaults = {
 	},
 };
 
-export function getTestClient() {
+function getTestClient() {
 	if (process.env.GITHUB_TOKEN) {
 		return github.getOctokit(process.env.GITHUB_TOKEN);
 	} else {
@@ -30,3 +30,7 @@ export function getTestClient() {
 		return new GitHub();
 	}
 }
+
+module.exports = {
+	getTestClient,
+};

@@ -1,10 +1,10 @@
-import test from "tape";
-import {
+const test = require("tape");
+const {
 	getWorkflowFromFile,
 	getWorkflowFromRunId,
 	getWorkflowRunForCommit,
-} from "../lib/index.js";
-import { getTestClient } from "./utils.js";
+} = require("../lib/index.js");
+const { getTestClient } = require("./utils.js");
 
 /** @type {GitHubContext} */
 const testContext = {

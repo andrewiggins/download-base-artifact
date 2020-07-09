@@ -2,7 +2,6 @@
   "name": "download-base-artifact",
   "version": "1.0.0",
   "description": "Download the base artifact for the current workflow",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "build": "rollup -c ./rollup.config.js",

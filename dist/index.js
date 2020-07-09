@@ -18,10 +18,6 @@ var zlib = _interopDefault(require('zlib'));
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-function unwrapExports (x) {
-	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-}
-
 function createCommonjsModule(fn, basedir, module) {
 	return module = {
 	  path: basedir,
@@ -353,8 +349,6 @@ function getState(name) {
 exports.getState = getState;
 
 });
-
-var core$1 = /*@__PURE__*/unwrapExports(core);
 
 var context = createCommonjsModule(function (module, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -5492,8 +5486,6 @@ exports.getOctokit = getOctokit;
 
 });
 
-var github$1 = /*@__PURE__*/unwrapExports(github);
-
 /**
  * @param {GitHubClient} client
  * @param {GitHubContext} context
@@ -5545,17 +5537,9 @@ async function getWorkflowFromFile(client, context, file) {
  * @param {string} [ref]
  * @returns {Promise<WorkflowRunData | null>}
  */
-async function getWorkflowRunForCommit(
-	client,
-	repo,
-	workflow_id,
-	commit,
-	ref
-) {
-	/** @type {WorkflowRunData} */
-	let run = null;
-
+async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
 	// https://docs.github.com/en/rest/reference/actions#list-workflow-runs
+
 	/** @type {Record<string, string | number>} */
 	const params = { ...repo, workflow_id, status: "success" };
 	if (ref) {
@@ -5566,14 +5550,16 @@ async function getWorkflowRunForCommit(
 
 	/** @type {WorkflowRunsAsyncIterator} */
 	const iterator = client.paginate.iterator(endpoint);
-	for await (const page of iterator) {
-		if (page.status > 299) {
+
+	let run = null;
+	for await (const res of iterator) {
+		if (res.status > 299) {
 			throw new Error(
-				`Non-success error code returned for workflow runs: ${page.status}`
+				`Non-success error code returned for workflow runs: ${res.status}`
 			);
 		}
 
-		run = page.data.find((run) => run.head_sha == commit);
+		run = res.data.find((run) => run.head_sha == commit);
 		if (run) {
 			break;
 		}
@@ -5582,28 +5568,40 @@ async function getWorkflowRunForCommit(
 	return run;
 }
 
+var lib = {
+	getWorkflowFromRunId,
+	getWorkflowFromFile,
+	getWorkflowRunForCommit,
+};
+
+const {
+	getWorkflowFromFile: getWorkflowFromFile$1,
+	getWorkflowFromRunId: getWorkflowFromRunId$1,
+	getWorkflowRunForCommit: getWorkflowRunForCommit$1,
+} = lib;
+
 /**
  * @param {GitHubClient} octokit
  * @param {GitHubContext} context
  * @param {Inputs} inputs
  */
 async function run(octokit, context, inputs) {
-	core$1.debug("Inputs: " + JSON.stringify(inputs, null, 2));
-	core$1.debug("Context: " + JSON.stringify(context, undefined, 2));
+	core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
+	core.debug("Context: " + JSON.stringify(context, undefined, 2));
 
 	// 1. Determine workflow
 	/** @type {WorkflowData} */
 	let workflow;
 	if (inputs.workflow) {
-		core$1.info(`Trying to get workflow from given file: ${inputs.workflow}...`);
-		workflow = await getWorkflowFromFile(octokit, context, inputs.workflow);
+		core.info(`Trying to get workflow from given file: ${inputs.workflow}...`);
+		workflow = await getWorkflowFromFile$1(octokit, context, inputs.workflow);
 	} else {
-		core$1.info(
+		core.info(
 			`Trying to get workflow from current workflow run (id: ${context.runId})...`
 		);
-		workflow = await getWorkflowFromRunId(octokit, context, context.runId);
+		workflow = await getWorkflowFromRunId$1(octokit, context, context.runId);
 	}
-	core$1.info(`Resolved to workflow "${workflow.name}" (id: ${workflow.id}).`);
+	core.info(`Resolved to workflow "${workflow.name}" (id: ${workflow.id}).`);
 
 	// 2. Determine base commit
 	/** @type {string} */
@@ -5612,14 +5610,14 @@ async function run(octokit, context, inputs) {
 		baseCommit = context.payload.before;
 		baseRef = context.payload.ref;
 
-		core$1.info(`Ref of push is ${baseRef}.`);
-		core$1.info(`Previous commit before push is ${baseCommit}.`);
+		core.info(`Ref of push is ${baseRef}.`);
+		core.info(`Previous commit before push is ${baseCommit}.`);
 	} else if (context.eventName == "pull_request") {
 		baseCommit = context.payload.pull_request.base.sha;
 		baseRef = context.payload.pull_request.base.ref;
 
-		core$1.info(`Base ref of pull request is ${baseRef}.`);
-		core$1.info(`Base commit of pull request is ${baseCommit}.`);
+		core.info(`Base ref of pull request is ${baseRef}.`);
+		core.info(`Base commit of pull request is ${baseCommit}.`);
 	} else {
 		throw new Error(
 			`Unsupported eventName in github.context: ${context.eventName}`
@@ -5627,7 +5625,7 @@ async function run(octokit, context, inputs) {
 	}
 
 	// 3. Determine most recent workflow run for commit
-	const workflowRun = await getWorkflowRunForCommit(
+	const workflowRun = await getWorkflowRunForCommit$1(
 		octokit,
 		context.repo,
 		workflow.id,
@@ -5645,7 +5643,7 @@ async function run(octokit, context, inputs) {
 		throw new Error(`Could not find workflow run matching ${params}`);
 	}
 
-	core$1.info(
+	core.info(
 		`Base workflow run: ${workflow.name}#${workflowRun.run_number} (id: ${workflowRun.id}).`
 	);
 
@@ -5654,18 +5652,18 @@ async function run(octokit, context, inputs) {
 
 (async () => {
 	try {
-		const token = core$1.getInput("github_token", { required: true });
-		const workflow = core$1.getInput("workflow", { required: false });
-		const artifact = core$1.getInput("artifact", { required: true });
-		const path = core$1.getInput("path", { required: false });
+		const token = core.getInput("github_token", { required: true });
+		const workflow = core.getInput("workflow", { required: false });
+		const artifact = core.getInput("artifact", { required: true });
+		const path = core.getInput("path", { required: false });
 
-		const octokit = github$1.getOctokit(token);
-		await run(octokit, github$1.context, {
+		const octokit = github.getOctokit(token);
+		await run(octokit, github.context, {
 			workflow,
 			artifact,
 			path,
 		});
 	} catch (e) {
-		core$1.setFailed(e.message);
+		core.setFailed(e.message);
 	}
 })();
