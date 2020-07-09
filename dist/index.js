@@ -1,3 +1,5 @@
+'use strict';
+
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var os = _interopDefault(require('os'));
@@ -25,7 +27,7 @@ function createCommonjsModule(fn, basedir, module) {
 	  path: basedir,
 	  exports: {},
 	  require: function (path, base) {
-      return commonjsRequire();
+      return commonjsRequire(path, (base === undefined || base === null) ? module.path : base);
     }
 	}, fn(module, module.exports), module.exports;
 }
@@ -1893,6 +1895,7 @@ class Blob {
 		const options = arguments[1];
 
 		const buffers = [];
+		let size = 0;
 
 		if (blobParts) {
 			const a = blobParts;
@@ -1911,6 +1914,7 @@ class Blob {
 				} else {
 					buffer = Buffer.from(typeof element === 'string' ? element : String(element));
 				}
+				size += buffer.length;
 				buffers.push(buffer);
 			}
 		}
@@ -3989,10 +3993,10 @@ class Octokit {
 Octokit.VERSION = VERSION$3;
 Octokit.plugins = [];
 
-var distWeb = {
+var distWeb = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	Octokit: Octokit
-};
+});
 
 const Endpoints = {
     actions: {
@@ -5276,10 +5280,10 @@ function restEndpointMethods(octokit) {
 }
 restEndpointMethods.VERSION = VERSION$4;
 
-var distWeb$1 = {
+var distWeb$1 = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	restEndpointMethods: restEndpointMethods
-};
+});
 
 const VERSION$5 = "2.2.3";
 
@@ -5389,10 +5393,10 @@ function paginateRest(octokit) {
 }
 paginateRest.VERSION = VERSION$5;
 
-var distWeb$2 = {
+var distWeb$2 = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	paginateRest: paginateRest
-};
+});
 
 var utils$1 = createCommonjsModule(function (module, exports) {
 var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
@@ -5490,40 +5494,14 @@ exports.getOctokit = getOctokit;
 
 var github$1 = /*@__PURE__*/unwrapExports(github);
 
-function _asyncIterator(iterable) {
-  var method;
-
-  if (typeof Symbol !== "undefined") {
-    if (Symbol.asyncIterator) {
-      method = iterable[Symbol.asyncIterator];
-      if (method != null) return method.call(iterable);
-    }
-
-    if (Symbol.iterator) {
-      method = iterable[Symbol.iterator];
-      if (method != null) return method.call(iterable);
-    }
-  }
-
-  throw new TypeError("Object is not async iterable");
-}
-
-function _extends() {
-  _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
-  };
-
-  return _extends.apply(this, arguments);
+/**
+ * @param {GitHubClient} client
+ * @param {GitHubContext} context
+ * @param {number} run_id
+ */
+async function getWorkflowIdFromRunId(client, context, run_id) {
+	const res = await client.actions.getWorkflowRun({ ...context.repo, run_id });
+	return res.data.workflow_id;
 }
 
 /**
@@ -5531,19 +5509,24 @@ function _extends() {
  * @param {GitHubContext} context
  * @param {string} file
  */
-function _catch(body, recover) {
-  try {
-    var result = body();
-  } catch (e) {
-    return recover(e);
-  }
-
-  if (result && result.then) {
-    return result.then(void 0, recover);
-  }
-
-  return result;
+async function getWorkflowIdFromFile(client, context, file) {
+	try {
+		const res = await client.actions.getWorkflow({
+			...context.repo,
+			workflow_id: file,
+		});
+		return res.data.id;
+	} catch (e) {
+		if (e.status == 404) {
+			throw new Error(
+				`Could not find workflow using file "${file}".\n\nFull request error details:\n${e}`
+			);
+		} else {
+			throw e;
+		}
+	}
 }
+
 /**
  * @param {GitHubClient} client
  * @param {GitHubRepo} repo
@@ -5552,457 +5535,116 @@ function _catch(body, recover) {
  * @param {string} [ref]
  * @returns {Promise<WorkflowRunData | null>}
  */
+async function getWorkflowRunForCommit(
+	client,
+	repo,
+	workflow_id,
+	commit,
+	ref
+) {
+	// https://docs.github.com/en/rest/reference/actions#list-workflow-runs
 
+	/** @type {Record<string, string | number>} */
+	const params = { ...repo, workflow_id, status: "success" };
+	if (ref) {
+		params.branch = ref.replace(/^refs\/heads\//, "");
+	}
 
-function _settle(pact, state, value) {
-  if (!pact.s) {
-    if (value instanceof _Pact) {
-      if (value.s) {
-        if (state & 1) {
-          state = value.s;
-        }
+	const endpoint = client.actions.listWorkflowRuns.endpoint(params);
 
-        value = value.v;
-      } else {
-        value.o = _settle.bind(null, pact, state);
-        return;
-      }
-    }
+	/** @type {WorkflowRunsAsyncIterator} */
+	const iterator = client.paginate.iterator(endpoint);
 
-    if (value && value.then) {
-      value.then(_settle.bind(null, pact, state), _settle.bind(null, pact, 2));
-      return;
-    }
+	let run = null;
+	for await (const res of iterator) {
+		if (res.status > 299) {
+			throw new Error(
+				`Non-success error code returned for workflow runs: ${res.status}`
+			);
+		}
 
-    pact.s = state;
-    pact.v = value;
-    const observer = pact.o;
+		run = res.data.find((run) => run.head_sha == commit);
+		if (run) {
+			break;
+		}
+	}
 
-    if (observer) {
-      observer(pact);
-    }
-  }
+	return run;
 }
-
-const _Pact = /*#__PURE__*/function () {
-  function _Pact() {}
-
-  _Pact.prototype.then = function (onFulfilled, onRejected) {
-    const result = new _Pact();
-    const state = this.s;
-
-    if (state) {
-      const callback = state & 1 ? onFulfilled : onRejected;
-
-      if (callback) {
-        try {
-          _settle(result, 1, callback(this.v));
-        } catch (e) {
-          _settle(result, 2, e);
-        }
-
-        return result;
-      } else {
-        return this;
-      }
-    }
-
-    this.o = function (_this) {
-      try {
-        const value = _this.v;
-
-        if (_this.s & 1) {
-          _settle(result, 1, onFulfilled ? onFulfilled(value) : value);
-        } else if (onRejected) {
-          _settle(result, 1, onRejected(value));
-        } else {
-          _settle(result, 2, value);
-        }
-      } catch (e) {
-        _settle(result, 2, e);
-      }
-    };
-
-    return result;
-  };
-
-  return _Pact;
-}();
-
-function _isSettledPact(thenable) {
-  return thenable instanceof _Pact && thenable.s & 1;
-}
-
-function _for(test, update, body) {
-  var stage;
-
-  for (;;) {
-    var shouldContinue = test();
-
-    if (_isSettledPact(shouldContinue)) {
-      shouldContinue = shouldContinue.v;
-    }
-
-    if (!shouldContinue) {
-      return result;
-    }
-
-    if (shouldContinue.then) {
-      stage = 0;
-      break;
-    }
-
-    var result = body();
-
-    if (result && result.then) {
-      if (_isSettledPact(result)) {
-        result = result.s;
-      } else {
-        stage = 1;
-        break;
-      }
-    }
-
-    if (update) {
-      var updateValue = update();
-
-      if (updateValue && updateValue.then && !_isSettledPact(updateValue)) {
-        stage = 2;
-        break;
-      }
-    }
-  }
-
-  var pact = new _Pact();
-
-  var reject = _settle.bind(null, pact, 2);
-
-  (stage === 0 ? shouldContinue.then(_resumeAfterTest) : stage === 1 ? result.then(_resumeAfterBody) : updateValue.then(_resumeAfterUpdate)).then(void 0, reject);
-  return pact;
-
-  function _resumeAfterBody(value) {
-    result = value;
-
-    do {
-      if (update) {
-        updateValue = update();
-
-        if (updateValue && updateValue.then && !_isSettledPact(updateValue)) {
-          updateValue.then(_resumeAfterUpdate).then(void 0, reject);
-          return;
-        }
-      }
-
-      shouldContinue = test();
-
-      if (!shouldContinue || _isSettledPact(shouldContinue) && !shouldContinue.v) {
-        _settle(pact, 1, result);
-
-        return;
-      }
-
-      if (shouldContinue.then) {
-        shouldContinue.then(_resumeAfterTest).then(void 0, reject);
-        return;
-      }
-
-      result = body();
-
-      if (_isSettledPact(result)) {
-        result = result.v;
-      }
-    } while (!result || !result.then);
-
-    result.then(_resumeAfterBody).then(void 0, reject);
-  }
-
-  function _resumeAfterTest(shouldContinue) {
-    if (shouldContinue) {
-      result = body();
-
-      if (result && result.then) {
-        result.then(_resumeAfterBody).then(void 0, reject);
-      } else {
-        _resumeAfterBody(result);
-      }
-    } else {
-      _settle(pact, 1, result);
-    }
-  }
-
-  function _resumeAfterUpdate() {
-    if (shouldContinue = test()) {
-      if (shouldContinue.then) {
-        shouldContinue.then(_resumeAfterTest).then(void 0, reject);
-      } else {
-        _resumeAfterTest(shouldContinue);
-      }
-    } else {
-      _settle(pact, 1, result);
-    }
-  }
-}
-
-function _finallyRethrows(body, finalizer) {
-  try {
-    var result = body();
-  } catch (e) {
-    return finalizer(true, e);
-  }
-
-  if (result && result.then) {
-    return result.then(finalizer.bind(null, false), finalizer.bind(null, true));
-  }
-
-  return finalizer(false, result);
-}
-
-const getWorkflowRunForCommit = function (client, repo, workflow_id, commit, ref) {
-  try {
-    let _exit;
-
-    var _iterator, _step, _value;
-
-    function _temp7(_result2) {
-      return _interrupt || _exit ? _result2 : run;
-    }
-
-    // https://docs.github.com/en/rest/reference/actions#list-workflow-runs
-
-    /** @type {Record<string, string | number>} */
-    const params = _extends({}, repo, {
-      workflow_id,
-      status: "success"
-    });
-
-    if (ref) {
-      params.branch = ref.replace(/^refs\/heads\//, "");
-    }
-
-    const endpoint = client.actions.listWorkflowRuns.endpoint(params);
-    /** @type {WorkflowRunsAsyncIterator} */
-
-    const iterator = client.paginate.iterator(endpoint);
-    let run = null;
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-
-    var _iteratorError;
-
-    const _temp6 = _finallyRethrows(function () {
-      return _catch(function () {
-        let _interrupt;
-
-        _iterator = _asyncIterator(iterator);
-        return _for(function () {
-          function _temp2(_iterator$next) {
-            function _temp(_step$value) {
-              return !(_interrupt || _exit) && (_value = _step$value, !_iteratorNormalCompletion);
-            }
-
-            const _iteratorNormalComple = _iteratorNormalCompletion = _step.done,
-                  _step2 = _step = _iterator$next;
-
-            return _interrupt || _exit ? _temp(!(_interrupt || _exit) && _step.value) : Promise.resolve(!(_interrupt || _exit) && _step.value).then(_temp);
-          }
-
-          return _interrupt || _exit ? !!_temp2(!(_interrupt || _exit) && _iterator.next()) : !!Promise.resolve(!(_interrupt || _exit) && _iterator.next()).then(_temp2);
-        }, function () {
-          return !!(_iteratorNormalCompletion = true);
-        }, function () {
-          const res = _value;
-
-          if (res.status > 299) {
-            throw new Error(`Non-success error code returned for workflow runs: ${res.status}`);
-          }
-
-          run = res.data.find(run => run.head_sha == commit);
-
-          if (run) {
-            _interrupt = 1;
-          }
-        });
-      }, function (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      });
-    }, function (_wasThrown, _result2) {
-      function _temp5(_result3) {
-        if (_exit) return _result3;
-        if (_wasThrown) throw _result2;
-        return _result2;
-      }
-
-      const _temp4 = _finallyRethrows(function () {
-        const _temp3 = function () {
-          if (!_iteratorNormalCompletion && _iterator.return != null) {
-            return Promise.resolve(_iterator.return()).then(function () {});
-          }
-        }();
-
-        if (_temp3 && _temp3.then) return _temp3.then(function () {});
-      }, function (_wasThrown2, _result3) {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-
-        if (_wasThrown2) throw _result3;
-        return _result3;
-      });
-
-      return _temp4 && _temp4.then ? _temp4.then(_temp5) : _temp5(_temp4);
-    });
-
-    return Promise.resolve(_temp6 && _temp6.then ? _temp6.then(_temp7) : _temp7(_temp6));
-  } catch (e) {
-    return Promise.reject(e);
-  }
-};
-const getWorkflowIdFromFile = function (client, context, file) {
-  try {
-    return Promise.resolve(_catch(function () {
-      return Promise.resolve(client.actions.getWorkflow(_extends({}, context.repo, {
-        workflow_id: file
-      }))).then(function (res) {
-        return res.data.id;
-      });
-    }, function (e) {
-      if (e.status == 404) {
-        throw new Error(`Could not find workflow using file "${file}".\n\nFull request error details:\n${e}`);
-      } else {
-        throw e;
-      }
-    }));
-  } catch (e) {
-    return Promise.reject(e);
-  }
-};
-
-/**
- * @param {GitHubClient} client
- * @param {GitHubContext} context
- * @param {number} run_id
- */
-const getWorkflowIdFromRunId = function (client, context, run_id) {
-  try {
-    return Promise.resolve(client.actions.getWorkflowRun(_extends({}, context.repo, {
-      run_id
-    }))).then(function (res) {
-      return res.data.workflow_id;
-    });
-  } catch (e) {
-    return Promise.reject(e);
-  }
-};
 
 /**
  * @param {GitHubClient} octokit
  * @param {GitHubContext} context
  * @param {Inputs} inputs
  */
+async function run(octokit, context, inputs) {
+	core$1.debug("Inputs: " + JSON.stringify(inputs, null, 2));
+	core$1.debug("Context: " + JSON.stringify(context, undefined, 2));
 
-function _catch$1(body, recover) {
-  try {
-    var result = body();
-  } catch (e) {
-    return recover(e);
-  }
+	// 1. Determine workflow
+	/** @type {number} */
+	let workflowId;
+	if (inputs.workflow) {
+		core$1.info(
+			`Trying to get workflow ID from given file: ${inputs.workflow}...`
+		);
+		workflowId = await getWorkflowIdFromFile(octokit, context, inputs.workflow);
+	} else {
+		core$1.info(
+			`Trying to get workflow ID from current workflow run: ${context.runId}...`
+		);
+		workflowId = await getWorkflowIdFromRunId(octokit, context, context.runId);
+	}
+	core$1.info(`Resolved to workflow ID: ${workflowId}`);
 
-  if (result && result.then) {
-    return result.then(void 0, recover);
-  }
+	// 2. Determine base commit
+	/** @type {string} */
+	let baseCommit, baseRef;
+	if (context.eventName == "push") {
+		baseCommit = context.payload.before;
+		baseRef = context.payload.ref;
+		core$1.info(`Previous commit before push was ${baseCommit}.`);
+	} else if (context.eventName == "pull_request") {
+		baseCommit = context.payload.pull_request.base.sha;
+		baseRef = context.payload.pull_request.base.ref;
+		core$1.info(`Base commit of pull request is ${baseCommit}.`);
+	} else {
+		throw new Error(
+			`Unsupported eventName in github.context: ${context.eventName}`
+		);
+	}
 
-  return result;
+	// 3. Determine most recent workflow run for commit
+	const workflowRun = await getWorkflowRunForCommit(
+		octokit,
+		context.repo,
+		workflowId,
+		baseCommit,
+		baseRef
+	);
+
+	if (!workflowRun) {
+		const params = JSON.stringify({ workflowId, baseCommit, baseRef });
+		throw new Error(`Could not find workflow run for ${params}`);
+	}
+
+	// 4. Download artifact for base workflow
 }
 
-const run = function (octokit, context, inputs) {
-  try {
-    function _temp2() {
-      core$1.info(`Resolved to workflow ID: ${workflowId}`); // 2. Determine base commit
+(async () => {
+	try {
+		const token = core$1.getInput("github_token", { required: true });
+		const workflow = core$1.getInput("workflow", { required: false });
+		const artifact = core$1.getInput("artifact", { required: true });
+		const path = core$1.getInput("path", { required: false });
 
-      /** @type {string} */
-
-      let baseCommit, baseRef;
-
-      if (context.eventName == "push") {
-        baseCommit = context.payload.before;
-        baseRef = context.payload.ref;
-        core$1.info(`Previous commit before push was ${baseCommit}.`);
-      } else if (context.eventName == "pull_request") {
-        baseCommit = context.payload.pull_request.base.sha;
-        baseRef = context.payload.pull_request.base.ref;
-        core$1.info(`Base commit of pull request is ${baseCommit}.`);
-      } else {
-        throw new Error(`Unsupported eventName in github.context: ${context.eventName}`);
-      } // 3. Determine most recent workflow run for commit
-
-
-      return Promise.resolve(getWorkflowRunForCommit(octokit, context.repo, workflowId, baseCommit, baseRef)).then(function (workflowRun) {
-        if (!workflowRun) {
-          const params = JSON.stringify({
-            workflowId,
-            baseCommit,
-            baseRef
-          });
-          throw new Error(`Could not find workflow run for ${params}`);
-        }
-      }); // 4. Download artifact for base workflow
-    }
-
-    core$1.debug("Inputs: " + JSON.stringify(inputs, null, 2));
-    core$1.debug("Context: " + JSON.stringify(context, undefined, 2)); // 1. Determine workflow
-
-    /** @type {number} */
-
-    let workflowId;
-
-    const _temp = function () {
-      if (inputs.workflow) {
-        core$1.info(`Trying to get workflow ID from given file: ${inputs.workflow}...`);
-        return Promise.resolve(getWorkflowIdFromFile(octokit, context, inputs.workflow)).then(function (_getWorkflowIdFromFil) {
-          workflowId = _getWorkflowIdFromFil;
-        });
-      } else {
-        core$1.info(`Trying to get workflow ID from current workflow run: ${context.runId}...`);
-        return Promise.resolve(getWorkflowIdFromRunId(octokit, context, context.runId)).then(function (_getWorkflowIdFromRun) {
-          workflowId = _getWorkflowIdFromRun;
-        });
-      }
-    }();
-
-    return Promise.resolve(_temp && _temp.then ? _temp.then(_temp2) : _temp2(_temp));
-  } catch (e) {
-    return Promise.reject(e);
-  }
-};
-
-(function () {
-  try {
-    const _temp3 = _catch$1(function () {
-      const token = core$1.getInput("github_token", {
-        required: true
-      });
-      const workflow = core$1.getInput("workflow", {
-        required: false
-      });
-      const artifact = core$1.getInput("artifact", {
-        required: true
-      });
-      const path = core$1.getInput("path", {
-        required: false
-      });
-      const octokit = github$1.getOctokit(token);
-      return Promise.resolve(run(octokit, github$1.context, {
-        workflow,
-        artifact,
-        path
-      })).then(function () {});
-    }, function (e) {
-      core$1.setFailed(e.message);
-    });
-
-    return _temp3 && _temp3.then ? _temp3.then(function () {}) : void 0;
-  } catch (e) {
-    Promise.reject(e);
-  }
+		const octokit = github$1.getOctokit(token);
+		await run(octokit, github$1.context, {
+			workflow,
+			artifact,
+			path,
+		});
+	} catch (e) {
+		core$1.setFailed(e.message);
+	}
 })();

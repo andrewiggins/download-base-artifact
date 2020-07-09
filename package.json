@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "microbundle -f cjs --no-sourcemap --target node -i index.js -o dist/index.js",
+    "build": "rollup -c ./rollup.config.js",
     "test": "node tests/index.test.js"
   },
   "repository": {
@@ -28,13 +28,18 @@
       "pre-commit": "npm run build && git add dist && lint-staged"
     }
   },
-  "devDependencies": {
+  "dependencies": {
     "@actions/core": "^1.2.4",
-    "@actions/github": "^4.0.0",
+    "@actions/github": "^4.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^13.0.0",
+    "@rollup/plugin-node-resolve": "^8.1.0",
     "husky": "^4.2.5",
     "lint-staged": "^10.2.11",
-    "microbundle": "^0.12.2",
     "prettier": "^2.0.5",
+    "rollup": "^2.21.0",
+    "rollup-plugin-node-externals": "^2.2.0",
     "tape": "^5.0.1"
   }
 }
