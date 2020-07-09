@@ -27,6 +27,7 @@ jobs:
           path: base
       - run: ls -al
       - run: ls -al base
+      - run: diff test-artifact.txt base/test-artifact.txt | egrep '[a-zA-z0-9]+' -
       - uses: actions/upload-artifact@v2
         with:
           name: test-artifact.txt
