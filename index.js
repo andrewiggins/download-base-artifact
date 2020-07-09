@@ -62,6 +62,8 @@ async function run(octokit, context, inputs) {
 		throw new Error(`Could not find workflow run for ${params}`);
 	}
 
+	core.info(`Base workflow run id: ${workflowRun.id}`);
+
 	// 4. Download artifact for base workflow
 }
 
