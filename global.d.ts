@@ -1,4 +1,3 @@
-import github from "@actions/github";
 import {
 	OctokitResponse,
 	ActionsGetWorkflowResponseData,
@@ -6,20 +5,14 @@ import {
 	ActionsGetArtifactResponseData,
 } from "@octokit/types";
 
-declare global {
-	type GitHubClient = ReturnType<typeof github.getOctokit>;
-	type GitHubContext = typeof github.context;
-	type GitHubRepo = GitHubContext["repo"];
+export type WorkflowData = ActionsGetWorkflowResponseData;
+export type WorkflowRunData = ActionsGetWorkflowRunResponseData;
+export type ArtifactData = ActionsGetArtifactResponseData;
 
-	type WorkflowData = ActionsGetWorkflowResponseData;
-	type WorkflowRunData = ActionsGetWorkflowRunResponseData;
-	type ArtifactData = ActionsGetArtifactResponseData;
+export type WorkflowRunsAsyncIterator = AsyncIterableIterator<
+	OctokitResponse<WorkflowRunData[]>
+>;
 
-	type WorkflowRunsAsyncIterator = AsyncIterableIterator<
-		OctokitResponse<WorkflowRunData[]>
-	>;
-
-	type ArtifactsAsyncIterator = AsyncIterableIterator<
-		OctokitResponse<ActionsGetArtifactResponseData[]>
-	>;
-}
+export type ArtifactsAsyncIterator = AsyncIterableIterator<
+	OctokitResponse<ActionsGetArtifactResponseData[]>
+>;

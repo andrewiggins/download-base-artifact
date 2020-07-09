@@ -35,7 +35,7 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	const repo = context.repo;
 
 	// 1. Determine workflow
-	/** @type {WorkflowData} */
+	/** @type {import('./global').WorkflowData} */
 	let workflow;
 	if (inputs.workflow) {
 		log.info(`Trying to get workflow matching "${inputs.workflow}"...`);
