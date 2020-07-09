@@ -8026,18 +8026,27 @@ async function run(octokit, context, inputs) {
 	core.debug(`Commit Run: ${JSON.stringify(commitRun, null, 2)}`);
 	core.debug(`LKG Run: ${JSON.stringify(lkgRun, null, 2)}`);
 
-	let workflowRun = commitRun;
-	if (!workflowRun || workflowRun.conclusion !== "success") {
-		core.warning(
-			`Could not find successful workflow run for commit ${baseCommit}`
-		);
-
-		workflowRun = lkgRun;
-		if (workflowRun) {
-			core.info(`Using last successful run on ${baseRef}.`);
-		} else {
-			core.warning(`Could not find successful workflow run for ${baseRef}`);
+	let workflowRun,
+		warningMessage = "";
+	if (commitRun && commitRun.conclusion == "success") {
+		workflowRun = commitRun;
+	} else {
+		if (!commitRun) {
+			warningMessage += `Could not find workflow run for ${baseCommit}.`;
+		} else if (commitRun.conclusion !== "success") {
+			warningMessage += `Workflow run for ${baseCommit} (${workflow.name}:${commitRun.run_number}) was not successful. Conclusion was ${commitRun.conclusion}`;
 		}
+
+		if (lkgRun) {
+			warningMessage += ` Using last successful run for ${baseRef}: ${workflow.name}:${lkgRun.run_number} (id: ${lkgRun.id})`;
+			workflowRun = lkgRun;
+		} else {
+			warningMessage += ` Could not find any successful workflow run for ${baseRef} to fall back to.`;
+		}
+	}
+
+	if (warningMessage !== "") {
+		core.warning(warningMessage);
 	}
 
 	if (!workflowRun) {
@@ -8051,7 +8060,9 @@ async function run(octokit, context, inputs) {
 	}
 
 	const workflowRunName = `${workflow.name}#${workflowRun.run_number}`;
-	core.info(`Base workflow run: ${workflowRunName} (id: ${workflowRun.id})`);
+	core.info(
+		`Using ${workflowRunName} (id: ${workflowRun.id}) as base workflow run`
+	);
 
 	// 4. Download artifact for base workflow
 	const artifact = await getArtifact$1(
