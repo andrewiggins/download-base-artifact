@@ -76,11 +76,11 @@ async function run(octokit, context, inputs) {
 		if (!commitRun) {
 			warningMessage += `Could not find workflow run for ${baseCommit}.`;
 		} else if (commitRun.conclusion !== "success") {
-			warningMessage += `Workflow run for ${baseCommit} (${workflow.name}:${commitRun.run_number}) was not successful. Conclusion was ${commitRun.conclusion}`;
+			warningMessage += `Workflow run for ${baseCommit} (${workflow.name}#${commitRun.run_number}) was not successful. Conclusion was "${commitRun.conclusion}".`;
 		}
 
 		if (lkgRun) {
-			warningMessage += ` Using last successful run for ${baseRef}: ${workflow.name}:${lkgRun.run_number} (id: ${lkgRun.id})`;
+			warningMessage += ` Using last successful run for ${baseRef}: ${workflow.name}#${lkgRun.run_number} (id: ${lkgRun.id})`;
 			workflowRun = lkgRun;
 		} else {
 			warningMessage += ` Could not find any successful workflow run for ${baseRef} to fall back to.`;
