@@ -22,10 +22,4 @@ declare global {
 	type ArtifactsAsyncIterator = AsyncIterableIterator<
 		OctokitResponse<ActionsGetArtifactResponseData[]>
 	>;
-
-	interface Inputs {
-		workflow?: string;
-		artifact: string;
-		path?: string;
-	}
 }

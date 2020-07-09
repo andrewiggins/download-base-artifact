@@ -7825,7 +7825,7 @@ var admZip = function (/**String*/input) {
 };
 
 /**
- * @param {GitHubClient} client
+ * @param {import('../index').GitHubActionClient} client
  * @param {GitHubContext} context
  * @param {number} run_id
  * @returns {Promise<WorkflowData>}
@@ -7844,7 +7844,7 @@ async function getWorkflowFromRunId(client, context, run_id) {
 }
 
 /**
- * @param {GitHubClient} client
+ * @param {import('../index').GitHubActionClient} client
  * @param {GitHubContext} context
  * @param {string} file
  * @returns {Promise<WorkflowData>}
@@ -7868,7 +7868,7 @@ async function getWorkflowFromFile(client, context, file) {
 }
 
 /**
- * @param {GitHubClient} client
+ * @param {import('../index').GitHubActionClient} client
  * @param {GitHubRepo} repo
  * @param {number} workflow_id The ID of the workflow whose runs to search
  * @param {string} commit Commit to look for a workflow run
@@ -7917,7 +7917,7 @@ async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
 }
 
 /**
- * @param {GitHubClient} client
+ * @param {import('../index').GitHubActionClient} client
  * @param {GitHubRepo} repo
  * @param {number} run_id
  * @param {string} artifactName
