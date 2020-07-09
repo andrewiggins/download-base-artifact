@@ -5552,8 +5552,10 @@ async function getWorkflowRunForCommit(
 	commit,
 	ref
 ) {
-	// https://docs.github.com/en/rest/reference/actions#list-workflow-runs
+	/** @type {WorkflowRunData} */
+	let run = null;
 
+	// https://docs.github.com/en/rest/reference/actions#list-workflow-runs
 	/** @type {Record<string, string | number>} */
 	const params = { ...repo, workflow_id, status: "success" };
 	if (ref) {
@@ -5564,16 +5566,14 @@ async function getWorkflowRunForCommit(
 
 	/** @type {WorkflowRunsAsyncIterator} */
 	const iterator = client.paginate.iterator(endpoint);
-
-	let run = null;
-	for await (const res of iterator) {
-		if (res.status > 299) {
+	for await (const page of iterator) {
+		if (page.status > 299) {
 			throw new Error(
-				`Non-success error code returned for workflow runs: ${res.status}`
+				`Non-success error code returned for workflow runs: ${page.status}`
 			);
 		}
 
-		run = res.data.find((run) => run.head_sha == commit);
+		run = page.data.find((run) => run.head_sha == commit);
 		if (run) {
 			break;
 		}

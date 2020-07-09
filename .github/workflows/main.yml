@@ -18,7 +18,13 @@ jobs:
           node-version: "14.x"
       - run: npm ci
       - run: npm test
+      - run: echo "$GITHUB_RUN_NUMBER" > test-artifact.txt
       - name: Download Base Artifact
         uses: ./
         with:
-          artifact: "test-artifact.json"
+          artifact: "test-artifact.txt"
+          path: base
+      - uses: actions/upload-artifact@v2
+        with:
+          name: test-artifact.txt
+          path: test-artifact.txt
