@@ -5599,7 +5599,7 @@ async function run(octokit, context, inputs) {
 		workflow = await getWorkflowFromFile(octokit, context, inputs.workflow);
 	} else {
 		core$1.info(
-			`Trying to get workflow from current workflow run: ${context.runId}...`
+			`Trying to get workflow from current workflow run (id: ${context.runId})...`
 		);
 		workflow = await getWorkflowFromRunId(octokit, context, context.runId);
 	}
@@ -5611,10 +5611,14 @@ async function run(octokit, context, inputs) {
 	if (context.eventName == "push") {
 		baseCommit = context.payload.before;
 		baseRef = context.payload.ref;
-		core$1.info(`Previous commit before push was ${baseCommit}.`);
+
+		core$1.info(`Ref of push is ${baseRef}.`);
+		core$1.info(`Previous commit before push is ${baseCommit}.`);
 	} else if (context.eventName == "pull_request") {
 		baseCommit = context.payload.pull_request.base.sha;
 		baseRef = context.payload.pull_request.base.ref;
+
+		core$1.info(`Base ref of pull request is ${baseRef}.`);
 		core$1.info(`Base commit of pull request is ${baseCommit}.`);
 	} else {
 		throw new Error(
