@@ -17,6 +17,9 @@
     "url": "https://github.com/andrewiggins/download-base-artifact/issues"
   },
   "homepage": "https://github.com/andrewiggins/download-base-artifact#readme",
+  "files": [
+    "index.js"
+  ],
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx,yml,json}": [
       "prettier --write"

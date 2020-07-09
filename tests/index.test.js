@@ -4,7 +4,7 @@ const {
 	getWorkflowFromRunId,
 	getWorkflowRunForCommit,
 	getArtifact,
-} = require("../lib/index.js");
+} = require("../index.js");
 
 // Mostly copied from: https://github.com/actions/toolkit/blob/cee7d92d1d02e3107c9b1387b9690b89096b67be/packages/github/src/utils.ts#L12
 // Copied from there to allow for un-authed requests for local testing
@@ -41,7 +41,7 @@ function getTestClient() {
 
 const testClient = getTestClient();
 
-/** @type {import('../lib/index').GitHubRepo} */
+/** @type {import('../index').GitHubRepo} */
 const testRepo = {
 	owner: "andrewiggins",
 	repo: "download-base-artifact",

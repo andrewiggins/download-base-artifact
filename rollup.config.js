@@ -3,9 +3,9 @@ const { nodeResolve } = require("@rollup/plugin-node-resolve");
 const nodeExternals = require("rollup-plugin-node-externals");
 
 module.exports = {
-	input: "index.js",
+	input: "action.js",
 	output: {
-		file: "dist/index.js",
+		file: "dist/action.js",
 		format: "cjs",
 	},
 	plugins: [

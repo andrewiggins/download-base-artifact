@@ -1,15 +1,136 @@
 const path = require("path");
 const { mkdir } = require("fs").promises;
-const core = require("@actions/core");
-const github = require("@actions/github");
 const prettyBytes = require("pretty-bytes");
 const AdmZip = require("adm-zip");
-const {
-	getWorkflowFromFile,
-	getWorkflowFromRunId,
-	getWorkflowRunForCommit,
-	getArtifact,
-} = require("./lib");
+
+/** @typedef {{ owner: string; repo: string; }} GitHubRepo */
+
+/**
+ * @param {GitHubActionClient} client
+ * @param {GitHubRepo} repo
+ * @param {number} run_id
+ * @returns {Promise<import('./global').WorkflowData>}
+ */
+async function getWorkflowFromRunId(client, repo, run_id) {
+	const runResponse = await client.actions.getWorkflowRun({
+		...repo,
+		run_id,
+	});
+
+	const workflowRes = await client.request({
+		url: runResponse.data.workflow_url,
+	});
+
+	return workflowRes.data;
+}
+
+/**
+ * @param {GitHubActionClient} client
+ * @param {GitHubRepo} repo
+ * @param {string} file
+ * @returns {Promise<import('./global').WorkflowData>}
+ */
+async function getWorkflowFromFile(client, repo, file) {
+	try {
+		const res = await client.actions.getWorkflow({
+			...repo,
+			// @ts-ignore
+			workflow_id: file,
+		});
+		return res.data;
+	} catch (e) {
+		if (e.status == 404) {
+			throw new Error(
+				`Could not find workflow using file "${file}".\n\nFull request error details:\n${e}`
+			);
+		} else {
+			throw e;
+		}
+	}
+}
+
+/**
+ * @param {GitHubActionClient} client
+ * @param {GitHubRepo} repo
+ * @param {number} workflow_id The ID of the workflow whose runs to search
+ * @param {string} commit Commit to look for a workflow run
+ * @param {string} ref Branch commit should be found on
+ * @returns {Promise<[import('./global').WorkflowRunData | undefined, import('./global').WorkflowRunData]>}
+ */
+async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
+	/** @type {import('./global').WorkflowRunData} */
+	let runForCommit, lkgRun;
+
+	// https://docs.github.com/en/rest/reference/actions#list-workflow-runs
+	/** @type {Record<string, string | number>} */
+	const params = { ...repo, workflow_id };
+	if (ref) {
+		params.branch = ref.replace(/^refs\/heads\//, "");
+	}
+
+	const endpoint = client.actions.listWorkflowRuns.endpoint(params);
+
+	/** @type {import('./global').WorkflowRunsAsyncIterator} */
+	const iterator = client.paginate.iterator(endpoint);
+	paging: for await (const page of iterator) {
+		if (page.status > 299) {
+			throw new Error(
+				`Non-success error code returned for workflow runs: ${page.status}`
+			);
+		}
+
+		for (let run of page.data) {
+			// Get the last successful workflow run for the base ref
+			if (lkgRun == null && run.conclusion == "success") {
+				lkgRun = run;
+			}
+
+			if (runForCommit == null && run.head_sha == commit) {
+				runForCommit = run;
+			}
+
+			if (runForCommit && lkgRun) {
+				break paging;
+			}
+		}
+	}
+
+	return [runForCommit, lkgRun];
+}
+
+/**
+ * @param {GitHubActionClient} client
+ * @param {GitHubRepo} repo
+ * @param {number} run_id
+ * @param {string} artifactName
+ * @returns {Promise<import('./global').ArtifactData | undefined>}
+ */
+async function getArtifact(client, repo, run_id, artifactName) {
+	/** @type {import('./global').ArtifactData} */
+	let artifact;
+
+	const endpoint = client.actions.listWorkflowRunArtifacts.endpoint({
+		...repo,
+		run_id,
+	});
+
+	/** @type {import('./global').ArtifactsAsyncIterator} */
+	const iterator = client.paginate.iterator(endpoint);
+	for await (let page of iterator) {
+		if (page.status > 299) {
+			throw new Error(
+				`Non-success error code returned for listing artifacts: ${page.status}`
+			);
+		}
+
+		artifact = page.data.find((artifact) => artifact.name == artifactName);
+		if (artifact) {
+			break;
+		}
+	}
+
+	return artifact;
+}
 
 const defaultLogger = {
 	warn(getMsg) {
@@ -22,16 +143,22 @@ const defaultLogger = {
 };
 
 /**
- * @typedef {ReturnType<typeof github.getOctokit>} GitHubActionClient
+ * @typedef {ReturnType<typeof import('@actions/github').getOctokit>} GitHubActionClient
+ * @typedef {typeof import('@actions/github').context} GitHubActionContext
  * @typedef {{ workflow?: string; artifact: string; path?: string; }} Inputs
  * @typedef {{ warn(msg: string): void; info(msg: string): void; debug(getMsg: () => string): void; }} Logger
  *
  * @param {GitHubActionClient} octokit
- * @param {typeof github.context} context
+ * @param {GitHubActionContext} context
  * @param {Inputs} inputs
  * @param {Logger} [log]
  */
-async function run(octokit, context, inputs, log = defaultLogger) {
+async function downloadBaseArtifact(
+	octokit,
+	context,
+	inputs,
+	log = defaultLogger
+) {
 	const repo = context.repo;
 
 	// 1. Determine workflow
@@ -160,33 +287,10 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	adm.extractAllTo(inputs.path, true);
 }
 
-(async () => {
-	try {
-		const token = core.getInput("github_token", { required: true });
-		const workflow = core.getInput("workflow", { required: false });
-		const artifact = core.getInput("artifact", { required: true });
-		const path = core.getInput("path", { required: false });
-
-		const octokit = github.getOctokit(token);
-		const inputs = { workflow, artifact, path };
-
-		core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
-		core.debug("Context: " + JSON.stringify(github.context, undefined, 2));
-
-		const actionLogger = {
-			warn(msg) {
-				core.warning(msg);
-			},
-			info(msg) {
-				core.info(msg);
-			},
-			debug(getMsg) {
-				core.debug(getMsg());
-			},
-		};
-
-		await run(octokit, github.context, inputs, actionLogger);
-	} catch (e) {
-		core.setFailed(e.message);
-	}
-})();
+module.exports = {
+	getWorkflowFromFile,
+	getWorkflowFromRunId,
+	getWorkflowRunForCommit,
+	getArtifact,
+	downloadBaseArtifact,
+};

@@ -2,9 +2,9 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+var os = _interopDefault(require('os'));
 var path = _interopDefault(require('path'));
 var fs$3 = _interopDefault(require('fs'));
-var os = _interopDefault(require('os'));
 var Url = _interopDefault(require('url'));
 var http = _interopDefault(require('http'));
 var https = _interopDefault(require('https'));
@@ -7824,13 +7824,17 @@ var admZip = function (/**String*/input) {
 	}
 };
 
+const { mkdir } = fs$3.promises;
+
+
+
 /** @typedef {{ owner: string; repo: string; }} GitHubRepo */
 
 /**
- * @param {import('../index').GitHubActionClient} client
+ * @param {GitHubActionClient} client
  * @param {GitHubRepo} repo
  * @param {number} run_id
- * @returns {Promise<import('../global').WorkflowData>}
+ * @returns {Promise<import('./global').WorkflowData>}
  */
 async function getWorkflowFromRunId(client, repo, run_id) {
 	const runResponse = await client.actions.getWorkflowRun({
@@ -7846,15 +7850,16 @@ async function getWorkflowFromRunId(client, repo, run_id) {
 }
 
 /**
- * @param {import('../index').GitHubActionClient} client
+ * @param {GitHubActionClient} client
  * @param {GitHubRepo} repo
  * @param {string} file
- * @returns {Promise<import('../global').WorkflowData>}
+ * @returns {Promise<import('./global').WorkflowData>}
  */
 async function getWorkflowFromFile(client, repo, file) {
 	try {
 		const res = await client.actions.getWorkflow({
 			...repo,
+			// @ts-ignore
 			workflow_id: file,
 		});
 		return res.data;
@@ -7870,15 +7875,15 @@ async function getWorkflowFromFile(client, repo, file) {
 }
 
 /**
- * @param {import('../index').GitHubActionClient} client
+ * @param {GitHubActionClient} client
  * @param {GitHubRepo} repo
  * @param {number} workflow_id The ID of the workflow whose runs to search
  * @param {string} commit Commit to look for a workflow run
  * @param {string} ref Branch commit should be found on
- * @returns {Promise<[import('../global').WorkflowRunData | undefined, import('../global').WorkflowRunData]>}
+ * @returns {Promise<[import('./global').WorkflowRunData | undefined, import('./global').WorkflowRunData]>}
  */
 async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
-	/** @type {import('../global').WorkflowRunData} */
+	/** @type {import('./global').WorkflowRunData} */
 	let runForCommit, lkgRun;
 
 	// https://docs.github.com/en/rest/reference/actions#list-workflow-runs
@@ -7890,7 +7895,7 @@ async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
 
 	const endpoint = client.actions.listWorkflowRuns.endpoint(params);
 
-	/** @type {import('../global').WorkflowRunsAsyncIterator} */
+	/** @type {import('./global').WorkflowRunsAsyncIterator} */
 	const iterator = client.paginate.iterator(endpoint);
 	paging: for await (const page of iterator) {
 		if (page.status > 299) {
@@ -7919,14 +7924,14 @@ async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
 }
 
 /**
- * @param {import('../index').GitHubActionClient} client
+ * @param {GitHubActionClient} client
  * @param {GitHubRepo} repo
  * @param {number} run_id
  * @param {string} artifactName
- * @returns {Promise<import('../global').ArtifactData | undefined>}
+ * @returns {Promise<import('./global').ArtifactData | undefined>}
  */
 async function getArtifact(client, repo, run_id, artifactName) {
-	/** @type {import('../global').ArtifactData} */
+	/** @type {import('./global').ArtifactData} */
 	let artifact;
 
 	const endpoint = client.actions.listWorkflowRunArtifacts.endpoint({
@@ -7934,7 +7939,7 @@ async function getArtifact(client, repo, run_id, artifactName) {
 		run_id,
 	});
 
-	/** @type {import('../global').ArtifactsAsyncIterator} */
+	/** @type {import('./global').ArtifactsAsyncIterator} */
 	const iterator = client.paginate.iterator(endpoint);
 	for await (let page of iterator) {
 		if (page.status > 299) {
@@ -7952,25 +7957,6 @@ async function getArtifact(client, repo, run_id, artifactName) {
 	return artifact;
 }
 
-var lib = {
-	getWorkflowFromRunId,
-	getWorkflowFromFile,
-	getWorkflowRunForCommit,
-	getArtifact,
-};
-
-const { mkdir } = fs$3.promises;
-
-
-
-
-const {
-	getWorkflowFromFile: getWorkflowFromFile$1,
-	getWorkflowFromRunId: getWorkflowFromRunId$1,
-	getWorkflowRunForCommit: getWorkflowRunForCommit$1,
-	getArtifact: getArtifact$1,
-} = lib;
-
 const defaultLogger = {
 	warn(getMsg) {
 		console.warn(getMsg);
@@ -7982,16 +7968,22 @@ const defaultLogger = {
 };
 
 /**
- * @typedef {ReturnType<typeof github.getOctokit>} GitHubActionClient
+ * @typedef {ReturnType<typeof import('@actions/github').getOctokit>} GitHubActionClient
+ * @typedef {typeof import('@actions/github').context} GitHubActionContext
  * @typedef {{ workflow?: string; artifact: string; path?: string; }} Inputs
  * @typedef {{ warn(msg: string): void; info(msg: string): void; debug(getMsg: () => string): void; }} Logger
  *
  * @param {GitHubActionClient} octokit
- * @param {typeof github.context} context
+ * @param {GitHubActionContext} context
  * @param {Inputs} inputs
  * @param {Logger} [log]
  */
-async function run(octokit, context, inputs, log = defaultLogger) {
+async function downloadBaseArtifact(
+	octokit,
+	context,
+	inputs,
+	log = defaultLogger
+) {
 	const repo = context.repo;
 
 	// 1. Determine workflow
@@ -7999,10 +7991,10 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	let workflow;
 	if (inputs.workflow) {
 		log.info(`Trying to get workflow matching "${inputs.workflow}"...`);
-		workflow = await getWorkflowFromFile$1(octokit, repo, inputs.workflow);
+		workflow = await getWorkflowFromFile(octokit, repo, inputs.workflow);
 	} else {
 		log.info(`Trying to get workflow of current run (id: ${context.runId})...`);
-		workflow = await getWorkflowFromRunId$1(octokit, repo, context.runId);
+		workflow = await getWorkflowFromRunId(octokit, repo, context.runId);
 	}
 
 	log.debug(() => `Workflow: ${JSON.stringify(workflow, null, 2)}`);
@@ -8029,7 +8021,7 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	}
 
 	// 3. Determine most recent workflow run for commit
-	const [commitRun, lkgRun] = await getWorkflowRunForCommit$1(
+	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		octokit,
 		repo,
 		workflow.id,
@@ -8079,7 +8071,7 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	);
 
 	// 4. Download artifact for base workflow
-	const artifact = await getArtifact$1(
+	const artifact = await getArtifact(
 		octokit,
 		repo,
 		workflowRun.id,
@@ -8120,6 +8112,16 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 	adm.extractAllTo(inputs.path, true);
 }
 
+var downloadBaseArtifact_1 = {
+	getWorkflowFromFile,
+	getWorkflowFromRunId,
+	getWorkflowRunForCommit,
+	getArtifact,
+	downloadBaseArtifact,
+};
+
+const { downloadBaseArtifact: downloadBaseArtifact$1 } = downloadBaseArtifact_1;
+
 (async () => {
 	try {
 		const token = core.getInput("github_token", { required: true });
@@ -8145,7 +8147,7 @@ async function run(octokit, context, inputs, log = defaultLogger) {
 			},
 		};
 
-		await run(octokit, github.context, inputs, actionLogger);
+		await downloadBaseArtifact$1(octokit, github.context, inputs, actionLogger);
 	} catch (e) {
 		core.setFailed(e.message);
 	}
