@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "build": "microbundle -f cjs --compress --no-sourcemap --target node -i index.js -o dist/index.js",
+    "build": "microbundle -f cjs --no-sourcemap --target node -i index.js -o dist/index.js",
     "test": "node tests/index.test.js"
   },
   "repository": {
