@@ -8,5 +8,12 @@ module.exports = {
 		file: "dist/index.js",
 		format: "cjs",
 	},
-	plugins: [nodeResolve(), commonjs(), nodeExternals()],
+	plugins: [
+		nodeResolve(),
+		commonjs({
+			// Ignore Electron support in adm-zip
+			ignore: ["original-fs"],
+		}),
+		nodeExternals(),
+	],
 };

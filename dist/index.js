@@ -15,7 +15,6 @@ require('assert');
 var util$1 = _interopDefault(require('util'));
 var Stream = _interopDefault(require('stream'));
 var zlib = _interopDefault(require('zlib'));
-var originalFs$1 = _interopDefault(require('original-fs'));
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -5566,7 +5565,7 @@ var require$1 = function() {
   var fs = fs$3;
   if (process.versions['electron']) {
 	  try {
-	    originalFs = originalFs$1;
+	    originalFs = require$1("original-fs");
 	    if (Object.keys(originalFs).length > 0) {
 	      fs = originalFs;
       }
