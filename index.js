@@ -1,6 +1,10 @@
 import core from "@actions/core";
 import github from "@actions/github";
-import { getWorkflowIdFromFile, getWorkflowIdFromRunId } from "./lib";
+import {
+	getWorkflowIdFromFile,
+	getWorkflowIdFromRunId,
+	getWorkflowRunForCommit,
+} from "./lib";
 
 /**
  * @param {GitHubClient} octokit
@@ -29,12 +33,14 @@ async function run(octokit, context, inputs) {
 
 	// 2. Determine base commit
 	/** @type {string} */
-	let baseCommit;
+	let baseCommit, baseRef;
 	if (context.eventName == "push") {
 		baseCommit = context.payload.before;
+		baseRef = context.payload.ref;
 		core.info(`Previous commit before push was ${baseCommit}.`);
 	} else if (context.eventName == "pull_request") {
 		baseCommit = context.payload.pull_request.base.sha;
+		baseRef = context.payload.pull_request.base.ref;
 		core.info(`Base commit of pull request is ${baseCommit}.`);
 	} else {
 		throw new Error(
@@ -43,6 +49,18 @@ async function run(octokit, context, inputs) {
 	}
 
 	// 3. Determine most recent workflow run for commit
+	const workflowRun = await getWorkflowRunForCommit(
+		octokit,
+		context.repo,
+		workflowId,
+		baseCommit,
+		baseRef
+	);
+
+	if (!workflowRun) {
+		const params = JSON.stringify({ workflowId, baseCommit, baseRef });
+		throw new Error(`Could not find workflow run for ${params}`);
+	}
 
 	// 4. Download artifact for base workflow
 }
