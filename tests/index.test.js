@@ -1,4 +1,5 @@
-const test = require("tape");
+const { test } = require("uvu");
+const assert = require("uvu/assert");
 const {
 	getWorkflowFromFile,
 	getWorkflowFromRunId,
@@ -47,29 +48,28 @@ const testRepo = {
 	repo: "download-base-artifact",
 };
 
-test("getWorkflowFromFile", async (t) => {
+test("getWorkflowFromFile", async () => {
 	const workflow = await getWorkflowFromFile(testClient, testRepo, "main.yml");
 
-	t.equal(workflow.id, 1827281, "Correct workflow ID is returned");
+	assert.equal(workflow.id, 1827281, "Correct workflow ID is returned");
 });
 
-test("getWorkflowFromFile NotFound", async (t) => {
+test("getWorkflowFromFile NotFound", async () => {
 	try {
 		await getWorkflowFromFile(testClient, testRepo, "failure");
-		t.fail("Do not throw expected error.");
+		assert.unreachable("Did not throw expected error.");
 	} catch (e) {
-		t.match(
-			e.message,
-			/Could not find workflow/g,
+		assert.ok(
+			e.message.match(/Could not find workflow/g),
 			"Throws friendly error if workflow is not found"
 		);
 	}
 });
 
-test("getWorkflowFromRunId", async (t) => {
+test("getWorkflowFromRunId", async () => {
 	const workflow = await getWorkflowFromRunId(testClient, testRepo, 162490580);
 
-	t.equal(workflow.id, 1827281, "Correct workflow ID is returned");
+	assert.equal(workflow.id, 1827281, "Correct workflow ID is returned");
 });
 
 test("getWorkflowRunForCommit for push commit run", async (t) => {
@@ -81,11 +81,11 @@ test("getWorkflowRunForCommit for push commit run", async (t) => {
 		"refs/heads/master"
 	);
 
-	t.equal(commitRun.id, 162658683, "Correct run ID is returned");
-	t.ok(lkgRun, "Returns a valid lkg run");
+	assert.equal(commitRun.id, 162658683, "Correct run ID is returned");
+	assert.ok(lkgRun, "Returns a valid lkg run");
 });
 
-test("getWorkflowRunForCommit for pull_request commit run (e.g. PR into PR)", async (t) => {
+test("getWorkflowRunForCommit for pull_request commit run (e.g. PR into PR)", async () => {
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
 		testRepo,
@@ -94,11 +94,11 @@ test("getWorkflowRunForCommit for pull_request commit run (e.g. PR into PR)", as
 		"get-workflow-run"
 	);
 
-	t.equal(commitRun.id, 163536999, "Correct run ID is returned");
-	t.ok(lkgRun, "Returns a valid lkg run");
+	assert.equal(commitRun.id, 163536999, "Correct run ID is returned");
+	assert.ok(lkgRun, "Returns a valid lkg run");
 });
 
-test("getWorkflowRunForCommit with bad ref", async (t) => {
+test("getWorkflowRunForCommit with bad ref", async () => {
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
 		testRepo,
@@ -107,11 +107,14 @@ test("getWorkflowRunForCommit with bad ref", async (t) => {
 		"refs/heads/fake-branch"
 	);
 
-	t.notOk(commitRun, "Returns undefined for commitRun if ref doesn't exist");
-	t.notOk(lkgRun, "Returns undefined for lkgRun if ref doesn't exist");
+	assert.not.ok(
+		commitRun,
+		"Returns undefined for commitRun if ref doesn't exist"
+	);
+	assert.not.ok(lkgRun, "Returns undefined for lkgRun if ref doesn't exist");
 });
 
-test("getWorkflowRunForCommit with unknown commit", async (t) => {
+test("getWorkflowRunForCommit with unknown commit", async () => {
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
 		testRepo,
@@ -120,11 +123,11 @@ test("getWorkflowRunForCommit with unknown commit", async (t) => {
 		"refs/heads/master"
 	);
 
-	t.notOk(commitRun, "Returns undefined if not found on branch");
-	t.ok(lkgRun, "Returns LKG run event if commit can't be found");
+	assert.not.ok(commitRun, "Returns undefined if not found on branch");
+	assert.ok(lkgRun, "Returns LKG run event if commit can't be found");
 });
 
-test("getArtifact", async (t) => {
+test("getArtifact", async () => {
 	const artifact = await getArtifact(
 		testClient,
 		testRepo,
@@ -132,10 +135,10 @@ test("getArtifact", async (t) => {
 		"test-artifact.txt"
 	);
 
-	t.equal(artifact.id, 10721454, "Returns  if not found on branch");
+	assert.equal(artifact.id, 10721454, "Returns  if not found on branch");
 });
 
-test("getArtifact not found", async (t) => {
+test("getArtifact not found", async () => {
 	const artifact = await getArtifact(
 		testClient,
 		testRepo,
@@ -143,5 +146,11 @@ test("getArtifact not found", async (t) => {
 		"not-found.txt"
 	);
 
-	t.equal(artifact, undefined, "Returns undefined if artifact is not found");
+	assert.equal(
+		artifact,
+		undefined,
+		"Returns undefined if artifact is not found"
+	);
 });
+
+test.run();
