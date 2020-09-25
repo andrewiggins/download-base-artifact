@@ -7970,7 +7970,7 @@ const defaultLogger = {
 /**
  * @typedef {ReturnType<typeof import('@actions/github').getOctokit>} GitHubActionClient
  * @typedef {typeof import('@actions/github').context} GitHubActionContext
- * @typedef {{ workflow?: string; artifact: string; path?: string; }} Inputs
+ * @typedef {{ workflow?: string; artifact: string; path?: string; required: boolean; }} Inputs
  * @typedef {{ warn(msg: string): void; info(msg: string): void; debug(getMsg: () => string): void; }} Logger
  *
  * @param {GitHubActionClient} octokit
@@ -8078,6 +8078,19 @@ async function downloadBaseArtifact(
 		inputs.artifact
 	);
 
+	if (!artifact) {
+		if (inputs.required === true) {
+			throw new Error(
+				`Required artifact "${inputs.artifact}" was not found and is required`
+			);
+		} else {
+			console.log(
+				`Artifact "${inputs.artifact}" was not found and is not required. Exiting...`
+			);
+			return;
+		}
+	}
+
 	log.debug(() => "Artifact: " + JSON.stringify(artifact, null, 2));
 	log.info(`Located artifact "${artifact.name}" (id: ${artifact.id})`);
 
@@ -8128,9 +8141,10 @@ const { downloadBaseArtifact: downloadBaseArtifact$1 } = downloadBaseArtifact_1;
 		const workflow = core.getInput("workflow", { required: false });
 		const artifact = core.getInput("artifact", { required: true });
 		const path = core.getInput("path", { required: false });
+		const required = core.getInput("required", { required: false }) === "true";
 
 		const octokit = github.getOctokit(token);
-		const inputs = { workflow, artifact, path };
+		const inputs = { workflow, artifact, path, required };
 
 		core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
 		core.debug("Context: " + JSON.stringify(github.context, undefined, 2));

@@ -25,6 +25,12 @@ jobs:
         with:
           artifact: "test-artifact.txt"
           path: base
+      - name: Download Base Artifact
+        uses: ./
+        with:
+          artifact: "non-existent-artifact.txt"
+          path: base2
+          required: false
       - run: ls -al
       - run: ls -al base
       - run: diff test-artifact.txt base/test-artifact.txt | egrep '[a-zA-z0-9]+' -
