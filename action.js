@@ -37,7 +37,7 @@ const { downloadBaseArtifact } = require("./index");
 			core.setFailed(e.message);
 		} else {
 			core.info(
-				`Error was thrown but required is set to false so ignoring. See below for error.`
+				`Error was thrown but "required" input is set to false so ignoring it. See below for error.`
 			);
 			core.info(e.toString());
 		}
