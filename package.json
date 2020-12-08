@@ -1,6 +1,6 @@
 {
   "name": "download-base-artifact",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Download the base artifact for the current workflow",
   "main": "index.js",
   "scripts": {
