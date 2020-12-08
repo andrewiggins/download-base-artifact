@@ -1,6 +1,7 @@
 name: Main
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - "**"
@@ -23,14 +24,14 @@ jobs:
       - name: Download Base Artifact
         uses: ./
         with:
-          artifact: "test-artifact.txt"
-          path: base
-      - name: Download Base Artifact
-        uses: ./
-        with:
           artifact: "non-existent-artifact.txt"
           path: base2
           required: false
+      - name: Download Base Artifact
+        uses: ./
+        with:
+          artifact: "test-artifact.txt"
+          path: base
       - run: ls -al
       - run: ls -al base
       - run: diff test-artifact.txt base/test-artifact.txt | egrep '[a-zA-z0-9]+' -

@@ -145,7 +145,7 @@ const defaultLogger = {
 /**
  * @typedef {ReturnType<typeof import('@actions/github').getOctokit>} GitHubActionClient
  * @typedef {typeof import('@actions/github').context} GitHubActionContext
- * @typedef {{ workflow?: string; artifact: string; path?: string; required: boolean; }} Inputs
+ * @typedef {{ workflow?: string; artifact: string; path?: string; }} Inputs
  * @typedef {{ warn(msg: string): void; info(msg: string): void; debug(getMsg: () => string): void; }} Logger
  *
  * @param {GitHubActionClient} octokit
@@ -254,16 +254,7 @@ async function downloadBaseArtifact(
 	);
 
 	if (!artifact) {
-		if (inputs.required === true) {
-			throw new Error(
-				`Required artifact "${inputs.artifact}" was not found and is required`
-			);
-		} else {
-			console.log(
-				`Artifact "${inputs.artifact}" was not found and is not required. Exiting...`
-			);
-			return;
-		}
+		throw new Error(`Artifact "${inputs.artifact}" was not found`);
 	}
 
 	log.debug(() => "Artifact: " + JSON.stringify(artifact, null, 2));
