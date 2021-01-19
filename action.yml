@@ -23,6 +23,12 @@ inputs:
     description: "If required, this action will fail if a matching artifact cannot be found"
     required: false
     default: true
+  baseRef:
+    description: "The git ref that contains the base commit whose artifact is to be downloaded"
+    required: false
+  baseSha:
+    description: "The git commit SHA whose artifact for the given workflow should be downloaded"
+    required: false
 runs:
   using: "node12"
   main: "dist/action.js"

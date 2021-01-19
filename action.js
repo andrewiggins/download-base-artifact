@@ -11,9 +11,11 @@ const { downloadBaseArtifact } = require("./index");
 		const artifact = core.getInput("artifact", { required: true });
 		const path = core.getInput("path", { required: false });
 		required = core.getInput("required", { required: false }) === "true";
+		const baseRef = core.getInput("baseRef", { required: false });
+		const baseSha = core.getInput("baseSha", { required: false });
 
 		const octokit = github.getOctokit(token);
-		const inputs = { workflow, artifact, path };
+		const inputs = { workflow, artifact, path, baseRef, baseSha };
 
 		core.debug("Required: " + required);
 		core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
