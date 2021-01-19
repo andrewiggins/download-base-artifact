@@ -8032,7 +8032,7 @@ const defaultLogger = {
 /**
  * @typedef {ReturnType<typeof import('@actions/github').getOctokit>} GitHubActionClient
  * @typedef {typeof import('@actions/github').context} GitHubActionContext
- * @typedef {{ workflow?: string; artifact: string; path?: string; }} Inputs
+ * @typedef {{ workflow?: string; artifact: string; path?: string; baseRef?: string; baseSha?: string; }} Inputs
  * @typedef {{ warn(msg: string): void; info(msg: string): void; debug(getMsg: () => string): void; }} Logger
  *
  * @param {GitHubActionClient} octokit
@@ -8047,6 +8047,19 @@ async function downloadBaseArtifact(
 	log = defaultLogger
 ) {
 	const repo = context.repo;
+
+	// 0. Validate inputs
+	if (inputs.baseRef && !inputs.baseSha) {
+		throw new Error(
+			`baseRef and baseSha inputs must both be provided. Only received baseRef.`
+		);
+	}
+
+	if (!inputs.baseRef && inputs.baseSha) {
+		throw new Error(
+			`baseRef and baseSha inputs must both be provided. Only received baseRef.`
+		);
+	}
 
 	// 1. Determine workflow
 	/** @type {import('./global').WorkflowData} */
@@ -8064,7 +8077,13 @@ async function downloadBaseArtifact(
 
 	// 2. Determine base commit
 	let baseCommit, baseRef;
-	if (context.eventName == "push") {
+	if (inputs.baseRef && inputs.baseSha) {
+		baseCommit = inputs.baseSha;
+		baseRef = inputs.baseRef;
+
+		log.info(`Using inputs.baseRef: ${inputs.baseRef}`);
+		log.info(`Using inputs.baseSha: ${inputs.baseSha}`);
+	} else if (context.eventName == "push") {
 		baseCommit = context.payload.before;
 		baseRef = context.payload.ref;
 
@@ -8197,9 +8216,11 @@ const { downloadBaseArtifact: downloadBaseArtifact$1 } = downloadBaseArtifact_1;
 		const artifact = core.getInput("artifact", { required: true });
 		const path = core.getInput("path", { required: false });
 		required = core.getInput("required", { required: false }) === "true";
+		const baseRef = core.getInput("baseRef", { required: false });
+		const baseSha = core.getInput("baseSha", { required: false });
 
 		const octokit = github.getOctokit(token);
-		const inputs = { workflow, artifact, path };
+		const inputs = { workflow, artifact, path, baseRef, baseSha };
 
 		core.debug("Required: " + required);
 		core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
