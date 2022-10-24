@@ -14,6 +14,8 @@ module.exports = {
 			// Ignore Electron support in adm-zip
 			ignore: ["original-fs"],
 		}),
-		nodeExternals(),
+		nodeExternals({
+			deps: false,
+		}),
 	],
 };
