@@ -1,7 +1,7 @@
-const path = require("path");
-const { mkdir } = require("fs").promises;
-const prettyBytes = require("pretty-bytes");
-const AdmZip = require("adm-zip");
+import path from "path";
+import { mkdir } from "fs/promises";
+import prettyBytes from "pretty-bytes";
+import AdmZip from "adm-zip";
 
 /** @typedef {{ owner: string; repo: string; }} GitHubRepo */
 
@@ -11,7 +11,7 @@ const AdmZip = require("adm-zip");
  * @param {number} run_id
  * @returns {Promise<import('./global').WorkflowData>}
  */
-async function getWorkflowFromRunId(client, repo, run_id) {
+export async function getWorkflowFromRunId(client, repo, run_id) {
 	const runResponse = await client.rest.actions.getWorkflowRun({
 		...repo,
 		run_id,
@@ -30,7 +30,7 @@ async function getWorkflowFromRunId(client, repo, run_id) {
  * @param {string} file
  * @returns {Promise<import('./global').WorkflowData>}
  */
-async function getWorkflowFromFile(client, repo, file) {
+export async function getWorkflowFromFile(client, repo, file) {
 	try {
 		const res = await client.rest.actions.getWorkflow({
 			...repo,
@@ -57,7 +57,13 @@ async function getWorkflowFromFile(client, repo, file) {
  * @param {string} [ref] Branch commit should be found on
  * @returns {Promise<[import('./global').WorkflowRunData | undefined, import('./global').WorkflowRunData | undefined]>}
  */
-async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
+export async function getWorkflowRunForCommit(
+	client,
+	repo,
+	workflow_id,
+	commit,
+	ref
+) {
 	/** @type {import('./global').WorkflowRunData | undefined} */
 	let runForCommit;
 	/** @type {import('./global').WorkflowRunData | undefined} */
@@ -107,7 +113,7 @@ async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
  * @param {string} artifactName
  * @returns {Promise<import('./global').ArtifactData | undefined>}
  */
-async function getArtifact(client, repo, run_id, artifactName) {
+export async function getArtifact(client, repo, run_id, artifactName) {
 	/** @type {import('./global').ArtifactData | undefined} */
 	let artifact;
 
@@ -156,7 +162,7 @@ const defaultLogger = {
  * @param {Inputs} inputs
  * @param {Logger} [log]
  */
-async function downloadBaseArtifact(
+export async function downloadBaseArtifact(
 	octokit,
 	context,
 	inputs,
@@ -332,11 +338,3 @@ async function downloadBaseArtifact(
 
 	adm.extractAllTo(inputPath, true);
 }
-
-module.exports = {
-	getWorkflowFromFile,
-	getWorkflowFromRunId,
-	getWorkflowRunForCommit,
-	getArtifact,
-	downloadBaseArtifact,
-};

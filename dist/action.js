@@ -17,8 +17,13 @@ var Stream = _interopDefault(require('stream'));
 var Url = _interopDefault(require('url'));
 var punycode = _interopDefault(require('punycode'));
 var zlib = _interopDefault(require('zlib'));
+var promises = require('fs/promises');
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+function unwrapExports (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
 
 function createCommonjsModule(fn, basedir, module) {
 	return module = {
@@ -2310,6 +2315,8 @@ Object.defineProperty(exports, "toWin32Path", { enumerable: true, get: function 
 Object.defineProperty(exports, "toPlatformPath", { enumerable: true, get: function () { return pathUtils.toPlatformPath; } });
 
 });
+
+var core$1 = /*@__PURE__*/unwrapExports(core);
 
 var context = createCommonjsModule(function (module, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -9577,6 +9584,8 @@ exports.getOctokit = getOctokit;
 
 });
 
+var github$1 = /*@__PURE__*/unwrapExports(github);
+
 const BYTE_UNITS = [
 	'B',
 	'kB',
@@ -12431,10 +12440,6 @@ var admZip = function (/**String*/ input, /** object */ options) {
     };
 };
 
-const { mkdir } = fs$1.promises;
-
-
-
 /** @typedef {{ owner: string; repo: string; }} GitHubRepo */
 
 /**
@@ -12489,7 +12494,13 @@ async function getWorkflowFromFile(client, repo, file) {
  * @param {string} [ref] Branch commit should be found on
  * @returns {Promise<[import('./global').WorkflowRunData | undefined, import('./global').WorkflowRunData | undefined]>}
  */
-async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
+async function getWorkflowRunForCommit(
+	client,
+	repo,
+	workflow_id,
+	commit,
+	ref
+) {
 	/** @type {import('./global').WorkflowRunData | undefined} */
 	let runForCommit;
 	/** @type {import('./global').WorkflowRunData | undefined} */
@@ -12744,7 +12755,7 @@ async function downloadBaseArtifact(
 	}
 
 	const inputPath = inputs.path ? inputs.path : ".";
-	await mkdir(inputPath, { recursive: true });
+	await promises.mkdir(inputPath, { recursive: true });
 
 	const size = prettyBytes(artifact.size_in_bytes);
 	log.info(`Downloading artifact ${artifact.name}.zip (${size})...`);
@@ -12765,56 +12776,46 @@ async function downloadBaseArtifact(
 	adm.extractAllTo(inputPath, true);
 }
 
-var downloadBaseArtifact_1 = {
-	getWorkflowFromFile,
-	getWorkflowFromRunId,
-	getWorkflowRunForCommit,
-	getArtifact,
-	downloadBaseArtifact,
-};
-
-const { downloadBaseArtifact: downloadBaseArtifact$1 } = downloadBaseArtifact_1;
-
 (async () => {
 	let required = true;
 
 	try {
-		const token = core.getInput("github_token", { required: true });
-		const workflow = core.getInput("workflow", { required: false });
-		const artifact = core.getInput("artifact", { required: true });
-		const path = core.getInput("path", { required: false });
-		required = core.getInput("required", { required: false }) === "true";
-		const baseRef = core.getInput("baseRef", { required: false });
-		const baseSha = core.getInput("baseSha", { required: false });
+		const token = core$1.getInput("github_token", { required: true });
+		const workflow = core$1.getInput("workflow", { required: false });
+		const artifact = core$1.getInput("artifact", { required: true });
+		const path = core$1.getInput("path", { required: false });
+		required = core$1.getInput("required", { required: false }) === "true";
+		const baseRef = core$1.getInput("baseRef", { required: false });
+		const baseSha = core$1.getInput("baseSha", { required: false });
 
-		const octokit = github.getOctokit(token);
+		const octokit = github$1.getOctokit(token);
 		const inputs = { workflow, artifact, path, baseRef, baseSha };
 
-		core.debug("Required: " + required);
-		core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
-		core.debug("Context: " + JSON.stringify(github.context, undefined, 2));
+		core$1.debug("Required: " + required);
+		core$1.debug("Inputs: " + JSON.stringify(inputs, null, 2));
+		core$1.debug("Context: " + JSON.stringify(github$1.context, undefined, 2));
 
 		const actionLogger = {
 			warn(msg) {
-				core.warning(msg);
+				core$1.warning(msg);
 			},
 			info(msg) {
-				core.info(msg);
+				core$1.info(msg);
 			},
 			debug(getMsg) {
-				core.debug(getMsg());
+				core$1.debug(getMsg());
 			},
 		};
 
-		await downloadBaseArtifact$1(octokit, github.context, inputs, actionLogger);
+		await downloadBaseArtifact(octokit, github$1.context, inputs, actionLogger);
 	} catch (e) {
 		if (required) {
-			core.setFailed(e.message);
+			core$1.setFailed(e.message);
 		} else {
-			core.info(
+			core$1.info(
 				`Error was thrown but "required" input is set to false so ignoring it. See below for error.`
 			);
-			core.info(e.toString());
+			core$1.info(e.toString());
 		}
 	}
 })();
