@@ -1,8 +1,8 @@
-const commonjs = require("@rollup/plugin-commonjs");
-const { nodeResolve } = require("@rollup/plugin-node-resolve");
-const { default: nodeExternals } = require("rollup-plugin-node-externals");
+import commonjs from "@rollup/plugin-commonjs";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import nodeExternals from "rollup-plugin-node-externals";
 
-module.exports = {
+export default {
 	input: "action.js",
 	output: {
 		file: "dist/action.js",
