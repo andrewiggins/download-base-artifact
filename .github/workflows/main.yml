@@ -2,6 +2,11 @@ name: Main
 
 on:
   workflow_dispatch:
+    inputs:
+      all_optional:
+        description: 'Make all artifacts optional. Turn on if all run artifacts have expired.'
+        type: boolean
+        default: false
   pull_request:
     branches:
       - "**"
@@ -33,10 +38,12 @@ jobs:
         with:
           artifact: "test-artifact.txt"
           path: base
-          required: false
+          required: ${{ !inputs.all_optional }}
       - run: ls -al
-      # - run: ls -al base
-      # - run: diff test-artifact.txt base/test-artifact.txt | egrep '[a-zA-z0-9]+' -
+      - run: ls -al base
+        if: ${{ !inputs.all_optional }}
+      - run: diff test-artifact.txt base/test-artifact.txt | egrep '[a-zA-z0-9]+' -
+        if: ${{ !inputs.all_optional }}
       - uses: actions/upload-artifact@v2
         with:
           name: test-artifact.txt
