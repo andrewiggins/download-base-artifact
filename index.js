@@ -54,12 +54,14 @@ async function getWorkflowFromFile(client, repo, file) {
  * @param {GitHubRepo} repo
  * @param {number} workflow_id The ID of the workflow whose runs to search
  * @param {string} commit Commit to look for a workflow run
- * @param {string} ref Branch commit should be found on
- * @returns {Promise<[import('./global').WorkflowRunData | undefined, import('./global').WorkflowRunData]>}
+ * @param {string} [ref] Branch commit should be found on
+ * @returns {Promise<[import('./global').WorkflowRunData | undefined, import('./global').WorkflowRunData | undefined]>}
  */
 async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
-	/** @type {import('./global').WorkflowRunData} */
-	let runForCommit, lkgRun;
+	/** @type {import('./global').WorkflowRunData | undefined} */
+	let runForCommit
+	/** @type {import('./global').WorkflowRunData | undefined} */
+	let lkgRun;
 
 	// https://docs.github.com/en/rest/reference/actions#list-workflow-runs
 	/** @type {Record<string, string | number>} */
@@ -106,7 +108,7 @@ async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
  * @returns {Promise<import('./global').ArtifactData | undefined>}
  */
 async function getArtifact(client, repo, run_id, artifactName) {
-	/** @type {import('./global').ArtifactData} */
+	/** @type {import('./global').ArtifactData | undefined} */
 	let artifact;
 
 	const endpoint = client.actions.listWorkflowRunArtifacts.endpoint({
@@ -208,9 +210,29 @@ async function downloadBaseArtifact(
 
 		log.info(`Base ref of pull request is ${baseRef}`);
 		log.info(`Base commit of pull request is ${baseCommit}`);
-	} else {
+	} else if (!context.sha) {
 		throw new Error(
-			`Unsupported eventName in github.context: ${context.eventName}`
+			`No commit sha in action context (context.sha: "${context.sha}"). Current eventName is ${context.eventName}.`
+		);
+	} else {
+		const commit = await octokit.git
+			.getCommit({
+				...repo,
+				commit_sha: context.sha,
+			})
+			.then((r) => r.data);
+
+		if (commit.parents.length == 0) {
+			throw new Error(
+				`No parent commits to use as a base commit. Current commit: ${context.sha}`
+			);
+		}
+
+		baseCommit = commit.parents[0].sha;
+		baseRef = context.ref;
+
+		log.info(
+			`Unrecognized eventName (${context.eventName}). Using first parent commit (${baseCommit}) of current workflow commit (${context.sha})`
 		);
 	}
 
