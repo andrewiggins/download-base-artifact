@@ -27,7 +27,7 @@
     ]
   },
   "dependencies": {
-    "adm-zip": "^0.4.16",
+    "adm-zip": "^0.5.9",
     "pretty-bytes": "^5.3.0"
   },
   "devDependencies": {
