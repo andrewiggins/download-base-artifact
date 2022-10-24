@@ -1,19 +1,30 @@
-const commonjs = require("@rollup/plugin-commonjs");
-const { nodeResolve } = require("@rollup/plugin-node-resolve");
-const nodeExternals = require("rollup-plugin-node-externals");
+import commonjs from "@rollup/plugin-commonjs";
+import json from "@rollup/plugin-json";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import nodeExternals from "rollup-plugin-node-externals";
 
-module.exports = {
+export default {
 	input: "action.js",
 	output: {
 		file: "dist/action.js",
-		format: "cjs",
+		format: "esm",
 	},
 	plugins: [
-		nodeResolve(),
+		json({
+			compact: true,
+			preferConst: true,
+		}),
 		commonjs({
 			// Ignore Electron support in adm-zip
 			ignore: ["original-fs"],
 		}),
-		nodeExternals(),
+		nodeResolve({
+			// Since we know we are building for a node env, prefer exports.node over
+			// others if specified by a package (e.g. uuid)
+			exportConditions: ["node", "default", "module", "import"],
+		}),
+		nodeExternals({
+			deps: false,
+		}),
 	],
 };

@@ -1,6 +1,6 @@
-const core = require("@actions/core");
-const github = require("@actions/github");
-const { downloadBaseArtifact } = require("./index");
+import core from "@actions/core";
+import github from "@actions/github";
+import { downloadBaseArtifact } from "./index";
 
 (async () => {
 	let required = true;

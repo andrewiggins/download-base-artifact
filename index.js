@@ -1,7 +1,7 @@
-const path = require("path");
-const { mkdir } = require("fs").promises;
-const prettyBytes = require("pretty-bytes");
-const AdmZip = require("adm-zip");
+import path from "path";
+import { mkdir } from "fs/promises";
+import prettyBytes from "pretty-bytes";
+import AdmZip from "adm-zip";
 
 /** @typedef {{ owner: string; repo: string; }} GitHubRepo */
 
@@ -11,8 +11,8 @@ const AdmZip = require("adm-zip");
  * @param {number} run_id
  * @returns {Promise<import('./global').WorkflowData>}
  */
-async function getWorkflowFromRunId(client, repo, run_id) {
-	const runResponse = await client.actions.getWorkflowRun({
+export async function getWorkflowFromRunId(client, repo, run_id) {
+	const runResponse = await client.rest.actions.getWorkflowRun({
 		...repo,
 		run_id,
 	});
@@ -30,9 +30,9 @@ async function getWorkflowFromRunId(client, repo, run_id) {
  * @param {string} file
  * @returns {Promise<import('./global').WorkflowData>}
  */
-async function getWorkflowFromFile(client, repo, file) {
+export async function getWorkflowFromFile(client, repo, file) {
 	try {
-		const res = await client.actions.getWorkflow({
+		const res = await client.rest.actions.getWorkflow({
 			...repo,
 			// @ts-ignore
 			workflow_id: file,
@@ -57,9 +57,15 @@ async function getWorkflowFromFile(client, repo, file) {
  * @param {string} [ref] Branch commit should be found on
  * @returns {Promise<[import('./global').WorkflowRunData | undefined, import('./global').WorkflowRunData | undefined]>}
  */
-async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
+export async function getWorkflowRunForCommit(
+	client,
+	repo,
+	workflow_id,
+	commit,
+	ref
+) {
 	/** @type {import('./global').WorkflowRunData | undefined} */
-	let runForCommit
+	let runForCommit;
 	/** @type {import('./global').WorkflowRunData | undefined} */
 	let lkgRun;
 
@@ -70,7 +76,7 @@ async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
 		params.branch = ref.replace(/^refs\/heads\//, "");
 	}
 
-	const endpoint = client.actions.listWorkflowRuns.endpoint(params);
+	const endpoint = client.rest.actions.listWorkflowRuns.endpoint(params);
 
 	/** @type {import('./global').WorkflowRunsAsyncIterator} */
 	const iterator = client.paginate.iterator(endpoint);
@@ -107,11 +113,11 @@ async function getWorkflowRunForCommit(client, repo, workflow_id, commit, ref) {
  * @param {string} artifactName
  * @returns {Promise<import('./global').ArtifactData | undefined>}
  */
-async function getArtifact(client, repo, run_id, artifactName) {
+export async function getArtifact(client, repo, run_id, artifactName) {
 	/** @type {import('./global').ArtifactData | undefined} */
 	let artifact;
 
-	const endpoint = client.actions.listWorkflowRunArtifacts.endpoint({
+	const endpoint = client.rest.actions.listWorkflowRunArtifacts.endpoint({
 		...repo,
 		run_id,
 	});
@@ -149,13 +155,14 @@ const defaultLogger = {
  * @typedef {typeof import('@actions/github').context} GitHubActionContext
  * @typedef {{ workflow?: string; artifact: string; path?: string; baseRef?: string; baseSha?: string; }} Inputs
  * @typedef {{ warn(msg: string): void; info(msg: string): void; debug(getMsg: () => string): void; }} Logger
+ * @typedef {GitHubActionContext["payload"]["pull_request"]} PRPayload
  *
  * @param {GitHubActionClient} octokit
  * @param {GitHubActionContext} context
  * @param {Inputs} inputs
  * @param {Logger} [log]
  */
-async function downloadBaseArtifact(
+export async function downloadBaseArtifact(
 	octokit,
 	context,
 	inputs,
@@ -205,8 +212,11 @@ async function downloadBaseArtifact(
 		log.info(`Ref of push is ${baseRef}`);
 		log.info(`Previous commit before push is ${baseCommit}`);
 	} else if (context.eventName == "pull_request") {
-		baseCommit = context.payload.pull_request.base.sha;
-		baseRef = context.payload.pull_request.base.ref;
+		const prPayload = /** @type {NonNullable<PRPayload>} */ (
+			context.payload.pull_request
+		);
+		baseCommit = prPayload.base.sha;
+		baseRef = prPayload.base.ref;
 
 		log.info(`Base ref of pull request is ${baseRef}`);
 		log.info(`Base commit of pull request is ${baseCommit}`);
@@ -215,7 +225,7 @@ async function downloadBaseArtifact(
 			`No commit sha in action context (context.sha: "${context.sha}"). Current eventName is ${context.eventName}.`
 		);
 	} else {
-		const commit = await octokit.git
+		const commit = await octokit.rest.git
 			.getCommit({
 				...repo,
 				commit_sha: context.sha,
@@ -307,35 +317,24 @@ async function downloadBaseArtifact(
 		);
 	}
 
-	if (!inputs.path) {
-		inputs.path = ".";
-	}
-
-	await mkdir(inputs.path, { recursive: true });
+	const inputPath = inputs.path ? inputs.path : ".";
+	await mkdir(inputPath, { recursive: true });
 
 	const size = prettyBytes(artifact.size_in_bytes);
 	log.info(`Downloading artifact ${artifact.name}.zip (${size})...`);
-	const zip = await octokit.actions.downloadArtifact({
+	const zip = await octokit.rest.actions.downloadArtifact({
 		...repo,
 		artifact_id: artifact.id,
 		archive_format: "zip",
 	});
 
 	log.info(`Extracting ${artifact.name}.zip...`);
-	const adm = new AdmZip(Buffer.from(zip.data));
+	const adm = new AdmZip(Buffer.from(/**@type {any}*/ (zip.data)));
 	adm.getEntries().forEach((entry) => {
 		const action = entry.isDirectory ? "creating" : "inflating";
-		const filepath = path.join(inputs.path, entry.entryName);
+		const filepath = path.join(inputPath, entry.entryName);
 		log.info(`  ${action}: ${filepath}`);
 	});
 
-	adm.extractAllTo(inputs.path, true);
+	adm.extractAllTo(inputPath, true);
 }
-
-module.exports = {
-	getWorkflowFromFile,
-	getWorkflowFromRunId,
-	getWorkflowRunForCommit,
-	getArtifact,
-	downloadBaseArtifact,
-};
