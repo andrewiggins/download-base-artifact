@@ -1,23 +1,19 @@
-'use strict';
-
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var os = _interopDefault(require('os'));
-var fs$1 = _interopDefault(require('fs'));
-var crypto = _interopDefault(require('crypto'));
-var path = _interopDefault(require('path'));
-var http = _interopDefault(require('http'));
-var https = _interopDefault(require('https'));
-require('net');
-var tls = _interopDefault(require('tls'));
-var events = _interopDefault(require('events'));
-require('assert');
-var util$1 = _interopDefault(require('util'));
-var Stream = _interopDefault(require('stream'));
-var Url = _interopDefault(require('url'));
-var punycode = _interopDefault(require('punycode'));
-var zlib = _interopDefault(require('zlib'));
-var promises = require('fs/promises');
+import os from 'os';
+import fs$1 from 'fs';
+import crypto from 'crypto';
+import path from 'path';
+import http from 'http';
+import https from 'https';
+import 'net';
+import tls from 'tls';
+import events from 'events';
+import 'assert';
+import util$1 from 'util';
+import Stream from 'stream';
+import Url from 'url';
+import punycode from 'punycode';
+import zlib from 'zlib';
+import { mkdir } from 'fs/promises';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -12758,7 +12754,7 @@ async function downloadBaseArtifact(
 	}
 
 	const inputPath = inputs.path ? inputs.path : ".";
-	await promises.mkdir(inputPath, { recursive: true });
+	await mkdir(inputPath, { recursive: true });
 
 	const size = prettyBytes(artifact.size_in_bytes);
 	log.info(`Downloading artifact ${artifact.name}.zip (${size})...`);

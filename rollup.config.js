@@ -6,7 +6,7 @@ module.exports = {
 	input: "action.js",
 	output: {
 		file: "dist/action.js",
-		format: "cjs",
+		format: "esm",
 	},
 	plugins: [
 		nodeResolve(),
