@@ -1,19 +1,19 @@
-import os from 'os';
-import fs$1 from 'fs';
-import crypto from 'crypto';
-import path from 'path';
-import http from 'http';
-import https from 'https';
-import 'net';
-import tls from 'tls';
-import events from 'events';
-import 'assert';
-import util$1 from 'util';
-import Stream from 'stream';
-import Url from 'url';
-import punycode from 'punycode';
-import zlib from 'zlib';
-import { mkdir } from 'fs/promises';
+import node_os from 'node:os';
+import node_fs from 'node:fs';
+import crypto from 'node:crypto';
+import node_path from 'node:path';
+import http from 'node:http';
+import node_https from 'node:https';
+import 'node:net';
+import node_tls from 'node:tls';
+import node_events from 'node:events';
+import 'node:assert';
+import node_util from 'node:util';
+import Stream from 'node:stream';
+import Url from 'node:url';
+import node_punycode from 'node:punycode';
+import zlib from 'node:zlib';
+import { mkdir } from 'node:fs/promises';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -39,7 +39,7 @@ function commonjsRequire () {
 	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
 }
 
-var utils = createCommonjsModule(function (module, exports) {
+var utils$4 = createCommonjsModule(function (module, exports) {
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -103,7 +103,7 @@ var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.issue = exports.issueCommand = void 0;
-const os$1 = __importStar(os);
+const os = __importStar(node_os);
 
 /**
  * Commands
@@ -117,7 +117,7 @@ const os$1 = __importStar(os);
  */
 function issueCommand(command, properties, message) {
     const cmd = new Command(command, properties, message);
-    process.stdout.write(cmd.toString() + os$1.EOL);
+    process.stdout.write(cmd.toString() + os.EOL);
 }
 exports.issueCommand = issueCommand;
 function issue(name, message = '') {
@@ -159,13 +159,13 @@ class Command {
     }
 }
 function escapeData(s) {
-    return utils.toCommandValue(s)
+    return utils$4.toCommandValue(s)
         .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
         .replace(/\n/g, '%0A');
 }
 function escapeProperty(s) {
-    return utils.toCommandValue(s)
+    return utils$4.toCommandValue(s)
         .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
         .replace(/\n/g, '%0A')
@@ -312,7 +312,7 @@ function v1(options, buf, offset) {
   return buf || stringify(b);
 }
 
-function parse(uuid) {
+function parse$1(uuid) {
   if (!validate(uuid)) {
     throw TypeError('Invalid UUID');
   }
@@ -357,7 +357,7 @@ function stringToBytes(str) {
 }
 
 const DNS = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
-const URL$1 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+const URL$3 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
 function v35 (name, version, hashfunc) {
   function generateUUID(value, namespace, buf, offset) {
     if (typeof value === 'string') {
@@ -365,7 +365,7 @@ function v35 (name, version, hashfunc) {
     }
 
     if (typeof namespace === 'string') {
-      namespace = parse(namespace);
+      namespace = parse$1(namespace);
     }
 
     if (namespace.length !== 16) {
@@ -402,7 +402,7 @@ function v35 (name, version, hashfunc) {
 
 
   generateUUID.DNS = DNS;
-  generateUUID.URL = URL$1;
+  generateUUID.URL = URL$3;
   return generateUUID;
 }
 
@@ -417,6 +417,7 @@ function md5(bytes) {
 }
 
 const v3 = v35('v3', 0x30, md5);
+var v3$1 = v3;
 
 function v4(options, buf, offset) {
   options = options || {};
@@ -449,6 +450,7 @@ function sha1(bytes) {
 }
 
 const v5 = v35('v5', 0x50, sha1);
+var v5$1 = v5;
 
 var nil = '00000000-0000-0000-0000-000000000000';
 
@@ -463,14 +465,14 @@ function version(uuid) {
 var esmNode = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	v1: v1,
-	v3: v3,
+	v3: v3$1,
 	v4: v4,
-	v5: v5,
+	v5: v5$1,
 	NIL: nil,
 	version: version,
 	validate: validate,
 	stringify: stringify,
-	parse: parse
+	parse: parse$1
 });
 
 var fileCommand = createCommonjsModule(function (module, exports) {
@@ -498,8 +500,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.prepareKeyValueMessage = exports.issueFileCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(fs$1);
-const os$1 = __importStar(os);
+const fs = __importStar(node_fs);
+const os = __importStar(node_os);
 
 
 function issueFileCommand(command, message) {
@@ -510,14 +512,14 @@ function issueFileCommand(command, message) {
     if (!fs.existsSync(filePath)) {
         throw new Error(`Missing file at path: ${filePath}`);
     }
-    fs.appendFileSync(filePath, `${utils.toCommandValue(message)}${os$1.EOL}`, {
+    fs.appendFileSync(filePath, `${utils$4.toCommandValue(message)}${os.EOL}`, {
         encoding: 'utf8'
     });
 }
 exports.issueFileCommand = issueFileCommand;
 function prepareKeyValueMessage(key, value) {
     const delimiter = `ghadelimiter_${esmNode.v4()}`;
-    const convertedValue = utils.toCommandValue(value);
+    const convertedValue = utils$4.toCommandValue(value);
     // These should realistically never happen, but just in case someone finds a
     // way to exploit uuid generation let's not allow keys or values that contain
     // the delimiter.
@@ -527,7 +529,7 @@ function prepareKeyValueMessage(key, value) {
     if (convertedValue.includes(delimiter)) {
         throw new Error(`Unexpected input: value should not contain the delimiter "${delimiter}"`);
     }
-    return `${key}<<${delimiter}${os$1.EOL}${convertedValue}${os$1.EOL}${delimiter}`;
+    return `${key}<<${delimiter}${os.EOL}${convertedValue}${os.EOL}${delimiter}`;
 }
 exports.prepareKeyValueMessage = prepareKeyValueMessage;
 
@@ -618,13 +620,13 @@ function httpsOverHttp(options) {
 
 function httpOverHttps(options) {
   var agent = new TunnelingAgent(options);
-  agent.request = https.request;
+  agent.request = node_https.request;
   return agent;
 }
 
 function httpsOverHttps(options) {
   var agent = new TunnelingAgent(options);
-  agent.request = https.request;
+  agent.request = node_https.request;
   agent.createSocket = createSecureSocket;
   agent.defaultPort = 443;
   return agent;
@@ -655,7 +657,7 @@ function TunnelingAgent(options) {
     self.removeSocket(socket);
   });
 }
-util$1.inherits(TunnelingAgent, events.EventEmitter);
+node_util.inherits(TunnelingAgent, node_events.EventEmitter);
 
 TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
   var self = this;
@@ -799,7 +801,7 @@ function createSecureSocket(options, cb) {
     });
 
     // 0 is dummy port for v0.6
-    var secureSocket = tls.connect(0, tlsOptions);
+    var secureSocket = node_tls.connect(0, tlsOptions);
     self.sockets[self.sockets.indexOf(socket)] = secureSocket;
     cb(secureSocket);
   });
@@ -850,7 +852,7 @@ if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
 }
 var debug_1 = debug; // for test
 
-var tunnel = {
+var tunnel$1 = {
 	httpOverHttp: httpOverHttp_1,
 	httpsOverHttp: httpsOverHttp_1,
 	httpOverHttps: httpOverHttps_1,
@@ -858,9 +860,9 @@ var tunnel = {
 	debug: debug_1
 };
 
-var tunnel$1 = tunnel;
+var tunnel = tunnel$1;
 
-var lib = createCommonjsModule(function (module, exports) {
+var lib$1 = createCommonjsModule(function (module, exports) {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -893,9 +895,9 @@ var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisAr
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HttpClient = exports.isHttps = exports.HttpClientResponse = exports.HttpClientError = exports.getProxyUrl = exports.MediaTypes = exports.Headers = exports.HttpCodes = void 0;
 const http$1 = __importStar(http);
-const https$1 = __importStar(https);
+const https = __importStar(node_https);
 const pm = __importStar(proxy);
-const tunnel = __importStar(tunnel$1);
+const tunnel$1 = __importStar(tunnel);
 var HttpCodes;
 (function (HttpCodes) {
     HttpCodes[HttpCodes["OK"] = 200] = "OK";
@@ -1294,7 +1296,7 @@ class HttpClient {
         const info = {};
         info.parsedUrl = requestUrl;
         const usingSsl = info.parsedUrl.protocol === 'https:';
-        info.httpModule = usingSsl ? https$1 : http$1;
+        info.httpModule = usingSsl ? https : http$1;
         const defaultPort = usingSsl ? 443 : 80;
         info.options = {};
         info.options.host = info.parsedUrl.hostname;
@@ -1361,10 +1363,10 @@ class HttpClient {
             let tunnelAgent;
             const overHttps = proxyUrl.protocol === 'https:';
             if (usingSsl) {
-                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
+                tunnelAgent = overHttps ? tunnel$1.httpsOverHttps : tunnel$1.httpsOverHttp;
             }
             else {
-                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
+                tunnelAgent = overHttps ? tunnel$1.httpOverHttps : tunnel$1.httpOverHttp;
             }
             agent = tunnelAgent(agentOptions);
             this._proxyAgent = agent;
@@ -1372,12 +1374,12 @@ class HttpClient {
         // if reusing agent across request and tunneling agent isn't assigned create a new agent
         if (this._keepAlive && !agent) {
             const options = { keepAlive: this._keepAlive, maxSockets };
-            agent = usingSsl ? new https$1.Agent(options) : new http$1.Agent(options);
+            agent = usingSsl ? new https.Agent(options) : new http$1.Agent(options);
             this._agent = agent;
         }
         // if not using private agent and tunnel agent isn't setup then use global agent
         if (!agent) {
-            agent = usingSsl ? https$1.globalAgent : http$1.globalAgent;
+            agent = usingSsl ? https.globalAgent : http$1.globalAgent;
         }
         if (usingSsl && this._ignoreSslError) {
             // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
@@ -1467,7 +1469,7 @@ const lowercaseKeys = (obj) => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCa
 
 });
 
-var auth = createCommonjsModule(function (module, exports) {
+var auth$1 = createCommonjsModule(function (module, exports) {
 var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -1550,6 +1552,8 @@ exports.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHand
 
 });
 
+var core_1 = core;
+
 var oidcUtils = createCommonjsModule(function (module, exports) {
 var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -1571,7 +1575,7 @@ class OidcClient {
             allowRetries: allowRetry,
             maxRetries: maxRetry
         };
-        return new lib.HttpClient('actions/oidc-client', [new auth.BearerCredentialHandler(OidcClient.getRequestToken())], requestOptions);
+        return new lib$1.HttpClient('actions/oidc-client', [new auth$1.BearerCredentialHandler(OidcClient.getRequestToken())], requestOptions);
     }
     static getRequestToken() {
         const token = process.env['ACTIONS_ID_TOKEN_REQUEST_TOKEN'];
@@ -1614,9 +1618,9 @@ class OidcClient {
                     const encodedAudience = encodeURIComponent(audience);
                     id_token_url = `${id_token_url}&audience=${encodedAudience}`;
                 }
-                core.debug(`ID token url is ${id_token_url}`);
+                core_1.debug(`ID token url is ${id_token_url}`);
                 const id_token = yield OidcClient.getCall(id_token_url);
-                core.setSecret(id_token);
+                core_1.setSecret(id_token);
                 return id_token;
             }
             catch (error) {
@@ -1643,7 +1647,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.summary = exports.markdownSummary = exports.SUMMARY_DOCS_URL = exports.SUMMARY_ENV_VAR = void 0;
 
 
-const { access, appendFile, writeFile } = fs$1.promises;
+const { access, appendFile, writeFile } = node_fs.promises;
 exports.SUMMARY_ENV_VAR = 'GITHUB_STEP_SUMMARY';
 exports.SUMMARY_DOCS_URL = 'https://docs.github.com/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary';
 class Summary {
@@ -1666,7 +1670,7 @@ class Summary {
                 throw new Error(`Unable to find environment variable for $${exports.SUMMARY_ENV_VAR}. Check if your runtime environment supports job summaries.`);
             }
             try {
-                yield access(pathFromEnv, fs$1.constants.R_OK | fs$1.constants.W_OK);
+                yield access(pathFromEnv, node_fs.constants.R_OK | node_fs.constants.W_OK);
             }
             catch (_a) {
                 throw new Error(`Unable to access summary file: '${pathFromEnv}'. Check if the file has correct read/write permissions.`);
@@ -1762,7 +1766,7 @@ class Summary {
      * @returns {Summary} summary instance
      */
     addEOL() {
-        return this.addRaw(os.EOL);
+        return this.addRaw(node_os.EOL);
     }
     /**
      * Adds an HTML codeblock to the summary buffer
@@ -1936,7 +1940,7 @@ var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.toPlatformPath = exports.toWin32Path = exports.toPosixPath = void 0;
-const path$1 = __importStar(path);
+const path = __importStar(node_path);
 /**
  * toPosixPath converts the given path to the posix form. On Windows, \\ will be
  * replaced with /.
@@ -1968,7 +1972,7 @@ exports.toWin32Path = toWin32Path;
  * @return string The platform-specific path.
  */
 function toPlatformPath(pth) {
-    return pth.replace(/[/\\]/g, path$1.sep);
+    return pth.replace(/[/\\]/g, path.sep);
 }
 exports.toPlatformPath = toPlatformPath;
 
@@ -2008,8 +2012,8 @@ exports.getIDToken = exports.getState = exports.saveState = exports.group = expo
 
 
 
-const os$1 = __importStar(os);
-const path$1 = __importStar(path);
+const os = __importStar(node_os);
+const path = __importStar(node_path);
 
 /**
  * The code to exit an action
@@ -2035,7 +2039,7 @@ var ExitCode;
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function exportVariable(name, val) {
-    const convertedVal = utils.toCommandValue(val);
+    const convertedVal = utils$4.toCommandValue(val);
     process.env[name] = convertedVal;
     const filePath = process.env['GITHUB_ENV'] || '';
     if (filePath) {
@@ -2064,7 +2068,7 @@ function addPath(inputPath) {
     else {
         command.issueCommand('add-path', {}, inputPath);
     }
-    process.env['PATH'] = `${inputPath}${path$1.delimiter}${process.env['PATH']}`;
+    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
 }
 exports.addPath = addPath;
 /**
@@ -2139,8 +2143,8 @@ function setOutput(name, value) {
     if (filePath) {
         return fileCommand.issueFileCommand('OUTPUT', fileCommand.prepareKeyValueMessage(name, value));
     }
-    process.stdout.write(os$1.EOL);
-    command.issueCommand('set-output', { name }, utils.toCommandValue(value));
+    process.stdout.write(os.EOL);
+    command.issueCommand('set-output', { name }, utils$4.toCommandValue(value));
 }
 exports.setOutput = setOutput;
 /**
@@ -2189,7 +2193,7 @@ exports.debug = debug;
  * @param properties optional properties to add to the annotation.
  */
 function error(message, properties = {}) {
-    command.issueCommand('error', utils.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+    command.issueCommand('error', utils$4.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 exports.error = error;
 /**
@@ -2198,7 +2202,7 @@ exports.error = error;
  * @param properties optional properties to add to the annotation.
  */
 function warning(message, properties = {}) {
-    command.issueCommand('warning', utils.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+    command.issueCommand('warning', utils$4.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 exports.warning = warning;
 /**
@@ -2207,7 +2211,7 @@ exports.warning = warning;
  * @param properties optional properties to add to the annotation.
  */
 function notice(message, properties = {}) {
-    command.issueCommand('notice', utils.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+    command.issueCommand('notice', utils$4.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 exports.notice = notice;
 /**
@@ -2215,7 +2219,7 @@ exports.notice = notice;
  * @param message info message
  */
 function info(message) {
-    process.stdout.write(message + os$1.EOL);
+    process.stdout.write(message + os.EOL);
 }
 exports.info = info;
 /**
@@ -2273,7 +2277,7 @@ function saveState(name, value) {
     if (filePath) {
         return fileCommand.issueFileCommand('STATE', fileCommand.prepareKeyValueMessage(name, value));
     }
-    command.issueCommand('save-state', { name }, utils.toCommandValue(value));
+    command.issueCommand('save-state', { name }, utils$4.toCommandValue(value));
 }
 exports.saveState = saveState;
 /**
@@ -2327,12 +2331,12 @@ class Context {
         var _a, _b, _c;
         this.payload = {};
         if (process.env.GITHUB_EVENT_PATH) {
-            if (fs$1.existsSync(process.env.GITHUB_EVENT_PATH)) {
-                this.payload = JSON.parse(fs$1.readFileSync(process.env.GITHUB_EVENT_PATH, { encoding: 'utf8' }));
+            if (node_fs.existsSync(process.env.GITHUB_EVENT_PATH)) {
+                this.payload = JSON.parse(node_fs.readFileSync(process.env.GITHUB_EVENT_PATH, { encoding: 'utf8' }));
             }
             else {
                 const path = process.env.GITHUB_EVENT_PATH;
-                process.stdout.write(`GITHUB_EVENT_PATH ${path} does not exist${os.EOL}`);
+                process.stdout.write(`GITHUB_EVENT_PATH ${path} does not exist${node_os.EOL}`);
             }
         }
         this.eventName = process.env.GITHUB_EVENT_NAME;
@@ -2370,7 +2374,7 @@ exports.Context = Context;
 
 });
 
-var utils$1 = createCommonjsModule(function (module, exports) {
+var utils$3 = createCommonjsModule(function (module, exports) {
 var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -2392,7 +2396,7 @@ var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getApiBaseUrl = exports.getProxyAgent = exports.getAuthString = void 0;
-const httpClient = __importStar(lib);
+const httpClient = __importStar(lib$1);
 function getAuthString(token, options) {
     if (!token && !options.auth) {
         throw new Error('Parameter token or opts.auth is required');
@@ -2877,7 +2881,7 @@ function expand(template, context) {
     });
 }
 
-function parse$1(options) {
+function parse(options) {
     // https://fetch.spec.whatwg.org/#methods
     let method = options.method.toUpperCase();
     // replace :varname with {varname} to make it RFC 6570 compatible
@@ -2956,23 +2960,23 @@ function parse$1(options) {
 }
 
 function endpointWithDefaults(defaults, route, options) {
-    return parse$1(merge(defaults, route, options));
+    return parse(merge(defaults, route, options));
 }
 
-function withDefaults(oldDefaults, newDefaults) {
+function withDefaults$2(oldDefaults, newDefaults) {
     const DEFAULTS = merge(oldDefaults, newDefaults);
     const endpoint = endpointWithDefaults.bind(null, DEFAULTS);
     return Object.assign(endpoint, {
         DEFAULTS,
-        defaults: withDefaults.bind(null, DEFAULTS),
+        defaults: withDefaults$2.bind(null, DEFAULTS),
         merge: merge.bind(null, DEFAULTS),
-        parse: parse$1,
+        parse,
     });
 }
 
-const VERSION = "6.0.12";
+const VERSION$5 = "6.0.12";
 
-const userAgent = `octokit-endpoint.js/${VERSION} ${getUserAgent()}`;
+const userAgent = `octokit-endpoint.js/${VERSION$5} ${getUserAgent()}`;
 // DEFAULTS has all properties set that EndpointOptions has, except url.
 // So we use RequestParameters and add method as additional required property.
 const DEFAULTS = {
@@ -2988,10 +2992,10 @@ const DEFAULTS = {
     },
 };
 
-const endpoint = withDefaults(null, DEFAULTS);
+const endpoint = withDefaults$2(null, DEFAULTS);
 
 var conversions = {};
-var lib$1 = conversions;
+var lib = conversions;
 
 function sign(x) {
     return x < 0 ? -1 : 1;
@@ -3199,11 +3203,11 @@ module.exports.implForWrapper = function (wrapper) {
 };
 });
 
-var mappingTable = /*#__PURE__*/Object.freeze({
+var mappingTable$1 = /*#__PURE__*/Object.freeze({
 	__proto__: null
 });
 
-var mappingTable$1 = getCjsExportFromNamespace(mappingTable);
+var mappingTable = getCjsExportFromNamespace(mappingTable$1);
 
 var PROCESSING_OPTIONS = {
   TRANSITIONAL: 0,
@@ -3216,12 +3220,12 @@ function normalize(str) { // fix bug in v8
 
 function findStatus(val) {
   var start = 0;
-  var end = mappingTable$1.length - 1;
+  var end = mappingTable.length - 1;
 
   while (start <= end) {
     var mid = Math.floor((start + end) / 2);
 
-    var target = mappingTable$1[mid];
+    var target = mappingTable[mid];
     if (target[0][0] <= val && target[0][1] >= val) {
       return target;
     } else if (target[0][0] > val) {
@@ -3301,7 +3305,7 @@ var combiningMarksRegex = /[\u0300-\u036F\u0483-\u0489\u0591-\u05BD\u05BF\u05C1\
 
 function validateLabel(label, processing_option) {
   if (label.substr(0, 4) === "xn--") {
-    label = punycode.toUnicode(label);
+    label = node_punycode.toUnicode(label);
   }
 
   var error = false;
@@ -3357,7 +3361,7 @@ var toASCII = function(domain_name, useSTD3, processing_option, verifyDnsLength)
   var labels = result.string.split(".");
   labels = labels.map(function(l) {
     try {
-      return punycode.toASCII(l);
+      return node_punycode.toASCII(l);
     } catch(e) {
       result.error = true;
       return l;
@@ -3416,7 +3420,7 @@ const specialSchemes = {
 const failure = Symbol("failure");
 
 function countSymbols(str) {
-  return punycode.ucs2.decode(str).length;
+  return node_punycode.ucs2.decode(str).length;
 }
 
 function at(input, idx) {
@@ -3632,7 +3636,7 @@ function parseIPv6(input) {
   let compress = null;
   let pointer = 0;
 
-  input = punycode.ucs2.decode(input);
+  input = node_punycode.ucs2.decode(input);
 
   if (input[pointer] === 58) {
     if (input[pointer + 1] !== 58) {
@@ -3822,7 +3826,7 @@ function parseOpaqueHost(input) {
   }
 
   let output = "";
-  const decoded = punycode.ucs2.decode(input);
+  const decoded = node_punycode.ucs2.decode(input);
   for (let i = 0; i < decoded.length; ++i) {
     output += percentEncodeChar(decoded[i], isC0ControlPercentEncode);
   }
@@ -3953,7 +3957,7 @@ function URLStateMachine(input, base, encodingOverride, url, stateOverride) {
   this.arrFlag = false;
   this.passwordTokenSeenFlag = false;
 
-  this.input = punycode.ucs2.decode(this.input);
+  this.input = node_punycode.ucs2.decode(this.input);
 
   for (; this.pointer <= this.input.length; ++this.pointer) {
     const c = this.input[this.pointer];
@@ -4665,7 +4669,7 @@ module.exports.basicURLParse = function (input, options) {
 
 module.exports.setTheUsername = function (url, username) {
   url.username = "";
-  const decoded = punycode.ucs2.decode(username);
+  const decoded = node_punycode.ucs2.decode(username);
   for (let i = 0; i < decoded.length; ++i) {
     url.username += percentEncodeChar(decoded[i], isUserinfoPercentEncode);
   }
@@ -4673,7 +4677,7 @@ module.exports.setTheUsername = function (url, username) {
 
 module.exports.setThePassword = function (url, password) {
   url.password = "";
-  const decoded = punycode.ucs2.decode(password);
+  const decoded = node_punycode.ucs2.decode(password);
   for (let i = 0; i < decoded.length; ++i) {
     url.password += percentEncodeChar(decoded[i], isUserinfoPercentEncode);
   }
@@ -4918,9 +4922,9 @@ function URL(url) {
   for (let i = 0; i < arguments.length && i < 2; ++i) {
     args[i] = arguments[i];
   }
-  args[0] = lib$1["USVString"](args[0]);
+  args[0] = lib["USVString"](args[0]);
   if (args[1] !== undefined) {
-  args[1] = lib$1["USVString"](args[1]);
+  args[1] = lib["USVString"](args[1]);
   }
 
   module.exports.setup(this, args);
@@ -4941,7 +4945,7 @@ Object.defineProperty(URL.prototype, "href", {
     return this[impl].href;
   },
   set(V) {
-    V = lib$1["USVString"](V);
+    V = lib["USVString"](V);
     this[impl].href = V;
   },
   enumerable: true,
@@ -4968,7 +4972,7 @@ Object.defineProperty(URL.prototype, "protocol", {
     return this[impl].protocol;
   },
   set(V) {
-    V = lib$1["USVString"](V);
+    V = lib["USVString"](V);
     this[impl].protocol = V;
   },
   enumerable: true,
@@ -4980,7 +4984,7 @@ Object.defineProperty(URL.prototype, "username", {
     return this[impl].username;
   },
   set(V) {
-    V = lib$1["USVString"](V);
+    V = lib["USVString"](V);
     this[impl].username = V;
   },
   enumerable: true,
@@ -4992,7 +4996,7 @@ Object.defineProperty(URL.prototype, "password", {
     return this[impl].password;
   },
   set(V) {
-    V = lib$1["USVString"](V);
+    V = lib["USVString"](V);
     this[impl].password = V;
   },
   enumerable: true,
@@ -5004,7 +5008,7 @@ Object.defineProperty(URL.prototype, "host", {
     return this[impl].host;
   },
   set(V) {
-    V = lib$1["USVString"](V);
+    V = lib["USVString"](V);
     this[impl].host = V;
   },
   enumerable: true,
@@ -5016,7 +5020,7 @@ Object.defineProperty(URL.prototype, "hostname", {
     return this[impl].hostname;
   },
   set(V) {
-    V = lib$1["USVString"](V);
+    V = lib["USVString"](V);
     this[impl].hostname = V;
   },
   enumerable: true,
@@ -5028,7 +5032,7 @@ Object.defineProperty(URL.prototype, "port", {
     return this[impl].port;
   },
   set(V) {
-    V = lib$1["USVString"](V);
+    V = lib["USVString"](V);
     this[impl].port = V;
   },
   enumerable: true,
@@ -5040,7 +5044,7 @@ Object.defineProperty(URL.prototype, "pathname", {
     return this[impl].pathname;
   },
   set(V) {
-    V = lib$1["USVString"](V);
+    V = lib["USVString"](V);
     this[impl].pathname = V;
   },
   enumerable: true,
@@ -5052,7 +5056,7 @@ Object.defineProperty(URL.prototype, "search", {
     return this[impl].search;
   },
   set(V) {
-    V = lib$1["USVString"](V);
+    V = lib["USVString"](V);
     this[impl].search = V;
   },
   enumerable: true,
@@ -5064,7 +5068,7 @@ Object.defineProperty(URL.prototype, "hash", {
     return this[impl].hash;
   },
   set(V) {
-    V = lib$1["USVString"](V);
+    V = lib["USVString"](V);
     this[impl].hash = V;
   },
   enumerable: true,
@@ -5104,7 +5108,7 @@ var setTheUsername = urlStateMachine.setTheUsername;
 var setThePassword = urlStateMachine.setThePassword;
 var serializeHost = urlStateMachine.serializeHost;
 var serializeInteger = urlStateMachine.serializeInteger;
-var parseURL = urlStateMachine.parseURL;
+var parseURL$1 = urlStateMachine.parseURL;
 
 var publicApi = {
 	URL: URL$2,
@@ -5115,7 +5119,7 @@ var publicApi = {
 	setThePassword: setThePassword,
 	serializeHost: serializeHost,
 	serializeInteger: serializeInteger,
-	parseURL: parseURL
+	parseURL: parseURL$1
 };
 
 // Based on https://github.com/tmpvar/jsdom/blob/aa85b2abf07766ff7bf5c1f6daafb3726f2f2db5/lib/jsdom/living/blob.js
@@ -6249,7 +6253,7 @@ Object.defineProperty(Response.prototype, Symbol.toStringTag, {
 });
 
 const INTERNALS$2 = Symbol('Request internals');
-const URL$3 = Url.URL || publicApi.URL;
+const URL$1 = Url.URL || publicApi.URL;
 
 // fix an issue where "format", "parse" aren't a named export for node <10
 const parse_url = Url.parse;
@@ -6261,14 +6265,14 @@ const format_url = Url.format;
  * @param  {string} urlStr
  * @return {void}
  */
-function parseURL$1(urlStr) {
+function parseURL(urlStr) {
 	/*
  	Check whether the URL is absolute or not
  		Scheme: https://tools.ietf.org/html/rfc3986#section-3.1
  	Absolute URL: https://tools.ietf.org/html/rfc3986#section-4.3
  */
 	if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.exec(urlStr)) {
-		urlStr = new URL$3(urlStr).toString();
+		urlStr = new URL$1(urlStr).toString();
 	}
 
 	// Fallback to old implementation for arbitrary URLs
@@ -6311,14 +6315,14 @@ class Request {
 				// in order to support Node.js' Url objects; though WHATWG's URL objects
 				// will fall into this branch also (since their `toString()` will return
 				// `href` property anyway)
-				parsedURL = parseURL$1(input.href);
+				parsedURL = parseURL(input.href);
 			} else {
 				// coerce input to a string before attempting to parse
-				parsedURL = parseURL$1(`${input}`);
+				parsedURL = parseURL(`${input}`);
 			}
 			input = {};
 		} else {
-			parsedURL = parseURL$1(input.url);
+			parsedURL = parseURL(input.url);
 		}
 
 		let method = init.method || input.method || 'GET';
@@ -6546,7 +6550,7 @@ function fetch(url, opts) {
 		const request = new Request(url, opts);
 		const options = getNodeRequestOptions(request);
 
-		const send = (options.protocol === 'https:' ? https : http).request;
+		const send = (options.protocol === 'https:' ? node_https : http).request;
 		const signal = request.signal;
 
 		let response = null;
@@ -6941,7 +6945,7 @@ class RequestError extends Error {
     }
 }
 
-const VERSION$1 = "5.6.3";
+const VERSION$4 = "5.6.3";
 
 function getBufferResponse(response) {
     return response.arrayBuffer();
@@ -7087,11 +7091,11 @@ function withDefaults$1(oldEndpoint, newDefaults) {
 
 const request = withDefaults$1(endpoint, {
     headers: {
-        "user-agent": `octokit-request.js/${VERSION$1} ${getUserAgent()}`,
+        "user-agent": `octokit-request.js/${VERSION$4} ${getUserAgent()}`,
     },
 });
 
-const VERSION$2 = "4.8.0";
+const VERSION$3 = "4.8.0";
 
 function _buildMessageForResponseErrors(data) {
     return (`Request failed due to following response errors:\n` +
@@ -7167,26 +7171,26 @@ function graphql(request, query, options) {
     });
 }
 
-function withDefaults$2(request$1, newDefaults) {
+function withDefaults(request$1, newDefaults) {
     const newRequest = request$1.defaults(newDefaults);
     const newApi = (query, options) => {
         return graphql(newRequest, query, options);
     };
     return Object.assign(newApi, {
-        defaults: withDefaults$2.bind(null, newRequest),
+        defaults: withDefaults.bind(null, newRequest),
         endpoint: request.endpoint,
     });
 }
 
-const graphql$1 = withDefaults$2(request, {
+withDefaults(request, {
     headers: {
-        "user-agent": `octokit-graphql.js/${VERSION$2} ${getUserAgent()}`,
+        "user-agent": `octokit-graphql.js/${VERSION$3} ${getUserAgent()}`,
     },
     method: "POST",
     url: "/graphql",
 });
 function withCustomRequest(customRequest) {
-    return withDefaults$2(customRequest, {
+    return withDefaults(customRequest, {
         method: "POST",
         url: "/graphql",
     });
@@ -7195,7 +7199,7 @@ function withCustomRequest(customRequest) {
 const REGEX_IS_INSTALLATION_LEGACY = /^v1\./;
 const REGEX_IS_INSTALLATION = /^ghs_/;
 const REGEX_IS_USER_TO_SERVER = /^ghu_/;
-async function auth$1(token) {
+async function auth(token) {
     const isApp = token.split(/\./).length === 3;
     const isInstallation = REGEX_IS_INSTALLATION_LEGACY.test(token) ||
         REGEX_IS_INSTALLATION.test(token);
@@ -7240,12 +7244,12 @@ const createTokenAuth = function createTokenAuth(token) {
         throw new Error("[@octokit/auth-token] Token passed to createTokenAuth is not a string");
     }
     token = token.replace(/^(token|bearer) +/i, "");
-    return Object.assign(auth$1.bind(null, token), {
+    return Object.assign(auth.bind(null, token), {
         hook: hook.bind(null, token),
     });
 };
 
-const VERSION$3 = "3.6.0";
+const VERSION$2 = "3.6.0";
 
 class Octokit {
     constructor(options = {}) {
@@ -7265,7 +7269,7 @@ class Octokit {
         // prepend default user agent with `options.userAgent` if set
         requestDefaults.headers["user-agent"] = [
             options.userAgent,
-            `octokit-core.js/${VERSION$3} ${getUserAgent()}`,
+            `octokit-core.js/${VERSION$2} ${getUserAgent()}`,
         ]
             .filter(Boolean)
             .join(" ");
@@ -7364,10 +7368,10 @@ class Octokit {
         return NewOctokit;
     }
 }
-Octokit.VERSION = VERSION$3;
+Octokit.VERSION = VERSION$2;
 Octokit.plugins = [];
 
-var distWeb = /*#__PURE__*/Object.freeze({
+var distWeb$2 = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	Octokit: Octokit
 });
@@ -9036,7 +9040,7 @@ const Endpoints = {
     },
 };
 
-const VERSION$4 = "5.16.2";
+const VERSION$1 = "5.16.2";
 
 function endpointsToMethods(octokit, endpointsMap) {
     const newMethods = {};
@@ -9105,7 +9109,7 @@ function restEndpointMethods(octokit) {
         rest: api,
     };
 }
-restEndpointMethods.VERSION = VERSION$4;
+restEndpointMethods.VERSION = VERSION$1;
 function legacyRestEndpointMethods(octokit) {
     const api = endpointsToMethods(octokit, Endpoints);
     return {
@@ -9113,7 +9117,7 @@ function legacyRestEndpointMethods(octokit) {
         rest: api,
     };
 }
-legacyRestEndpointMethods.VERSION = VERSION$4;
+legacyRestEndpointMethods.VERSION = VERSION$1;
 
 var distWeb$1 = /*#__PURE__*/Object.freeze({
 	__proto__: null,
@@ -9121,7 +9125,7 @@ var distWeb$1 = /*#__PURE__*/Object.freeze({
 	restEndpointMethods: restEndpointMethods
 });
 
-const VERSION$5 = "2.21.3";
+const VERSION = "2.21.3";
 
 /**
  * Some “list” response that can be paginated have a different response structure
@@ -9475,9 +9479,9 @@ function paginateRest(octokit) {
         }),
     };
 }
-paginateRest.VERSION = VERSION$5;
+paginateRest.VERSION = VERSION;
 
-var distWeb$2 = /*#__PURE__*/Object.freeze({
+var distWeb = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	composePaginateRest: composePaginateRest,
 	isPaginatingEndpoint: isPaginatingEndpoint,
@@ -9485,7 +9489,7 @@ var distWeb$2 = /*#__PURE__*/Object.freeze({
 	paginatingEndpoints: paginatingEndpoints
 });
 
-var utils$3 = createCommonjsModule(function (module, exports) {
+var utils$1 = createCommonjsModule(function (module, exports) {
 var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -9508,7 +9512,7 @@ var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getOctokitOptions = exports.GitHub = exports.defaults = exports.context = void 0;
 const Context = __importStar(context);
-const Utils = __importStar(utils$1);
+const Utils = __importStar(utils$3);
 // octokit + plugins
 
 
@@ -9521,7 +9525,7 @@ exports.defaults = {
         agent: Utils.getProxyAgent(baseUrl)
     }
 };
-exports.GitHub = distWeb.Octokit.plugin(distWeb$1.restEndpointMethods, distWeb$2.paginateRest).defaults(exports.defaults);
+exports.GitHub = distWeb$2.Octokit.plugin(distWeb$1.restEndpointMethods, distWeb.paginateRest).defaults(exports.defaults);
 /**
  * Convience function to correctly format Octokit Options to pass into the constructor.
  *
@@ -9573,8 +9577,8 @@ exports.context = new Context.Context();
  * @param     options  other options to set
  */
 function getOctokit(token, options, ...additionalPlugins) {
-    const GitHubWithPlugins = utils$3.GitHub.plugin(...additionalPlugins);
-    return new GitHubWithPlugins(utils$3.getOctokitOptions(token, options));
+    const GitHubWithPlugins = utils$1.GitHub.plugin(...additionalPlugins);
+    return new GitHubWithPlugins(utils$1.getOctokitOptions(token, options));
 }
 exports.getOctokit = getOctokit;
 
@@ -9711,7 +9715,7 @@ var require$1 = function () {
             }
         } catch (e) {}
     }
-    return fs$1;
+    return node_fs;
 };
 
 var fileSystem = {
@@ -9883,7 +9887,7 @@ const crcTable = new Uint32Array(256).map((t, c) => {
 // UTILS functions
 
 function Utils(opts) {
-    this.sep = path.sep;
+    this.sep = node_path.sep;
     this.fs = fsystem;
 
     if (is_Obj(opts)) {
@@ -9894,7 +9898,7 @@ function Utils(opts) {
     }
 }
 
-var utils$4 = Utils;
+var utils = Utils;
 
 // INSTANCED functions
 
@@ -9920,27 +9924,27 @@ Utils.prototype.makeDir = function (/*String*/ folder) {
     mkdirSync(folder);
 };
 
-Utils.prototype.writeFileTo = function (/*String*/ path$1, /*Buffer*/ content, /*Boolean*/ overwrite, /*Number*/ attr) {
+Utils.prototype.writeFileTo = function (/*String*/ path, /*Buffer*/ content, /*Boolean*/ overwrite, /*Number*/ attr) {
     const self = this;
-    if (self.fs.existsSync(path$1)) {
+    if (self.fs.existsSync(path)) {
         if (!overwrite) return false; // cannot overwrite
 
-        var stat = self.fs.statSync(path$1);
+        var stat = self.fs.statSync(path);
         if (stat.isDirectory()) {
             return false;
         }
     }
-    var folder = path.dirname(path$1);
+    var folder = node_path.dirname(path);
     if (!self.fs.existsSync(folder)) {
         self.makeDir(folder);
     }
 
     var fd;
     try {
-        fd = self.fs.openSync(path$1, "w", 438); // 0666
+        fd = self.fs.openSync(path, "w", 438); // 0666
     } catch (e) {
-        self.fs.chmodSync(path$1, 438);
-        fd = self.fs.openSync(path$1, "w", 438);
+        self.fs.chmodSync(path, 438);
+        fd = self.fs.openSync(path, "w", 438);
     }
     if (fd) {
         try {
@@ -9949,11 +9953,11 @@ Utils.prototype.writeFileTo = function (/*String*/ path$1, /*Buffer*/ content, /
             self.fs.closeSync(fd);
         }
     }
-    self.fs.chmodSync(path$1, attr || 438);
+    self.fs.chmodSync(path, attr || 438);
     return true;
 };
 
-Utils.prototype.writeFileToAsync = function (/*String*/ path$1, /*Buffer*/ content, /*Boolean*/ overwrite, /*Number*/ attr, /*Function*/ callback) {
+Utils.prototype.writeFileToAsync = function (/*String*/ path, /*Buffer*/ content, /*Boolean*/ overwrite, /*Number*/ attr, /*Function*/ callback) {
     if (typeof attr === "function") {
         callback = attr;
         attr = undefined;
@@ -9961,25 +9965,25 @@ Utils.prototype.writeFileToAsync = function (/*String*/ path$1, /*Buffer*/ conte
 
     const self = this;
 
-    self.fs.exists(path$1, function (exist) {
+    self.fs.exists(path, function (exist) {
         if (exist && !overwrite) return callback(false);
 
-        self.fs.stat(path$1, function (err, stat) {
+        self.fs.stat(path, function (err, stat) {
             if (exist && stat.isDirectory()) {
                 return callback(false);
             }
 
-            var folder = path.dirname(path$1);
+            var folder = node_path.dirname(path);
             self.fs.exists(folder, function (exists) {
                 if (!exists) self.makeDir(folder);
 
-                self.fs.open(path$1, "w", 438, function (err, fd) {
+                self.fs.open(path, "w", 438, function (err, fd) {
                     if (err) {
-                        self.fs.chmod(path$1, 438, function () {
-                            self.fs.open(path$1, "w", 438, function (err, fd) {
+                        self.fs.chmod(path, 438, function () {
+                            self.fs.open(path, "w", 438, function (err, fd) {
                                 self.fs.write(fd, content, 0, content.length, 0, function () {
                                     self.fs.close(fd, function () {
-                                        self.fs.chmod(path$1, attr || 438, function () {
+                                        self.fs.chmod(path, attr || 438, function () {
                                             callback(true);
                                         });
                                     });
@@ -9989,13 +9993,13 @@ Utils.prototype.writeFileToAsync = function (/*String*/ path$1, /*Buffer*/ conte
                     } else if (fd) {
                         self.fs.write(fd, content, 0, content.length, 0, function () {
                             self.fs.close(fd, function () {
-                                self.fs.chmod(path$1, attr || 438, function () {
+                                self.fs.chmod(path, attr || 438, function () {
                                     callback(true);
                                 });
                             });
                         });
                     } else {
-                        self.fs.chmod(path$1, attr || 438, function () {
+                        self.fs.chmod(path, attr || 438, function () {
                             callback(true);
                         });
                     }
@@ -10005,7 +10009,7 @@ Utils.prototype.writeFileToAsync = function (/*String*/ path$1, /*Buffer*/ conte
     });
 };
 
-Utils.prototype.findFiles = function (/*String*/ path$1) {
+Utils.prototype.findFiles = function (/*String*/ path) {
     const self = this;
 
     function findSync(/*String*/ dir, /*RegExp*/ pattern, /*Boolean*/ recursive) {
@@ -10015,18 +10019,18 @@ Utils.prototype.findFiles = function (/*String*/ path$1) {
         }
         let files = [];
         self.fs.readdirSync(dir).forEach(function (file) {
-            var path$1 = path.join(dir, file);
+            var path = node_path.join(dir, file);
 
-            if (self.fs.statSync(path$1).isDirectory() && recursive) files = files.concat(findSync(path$1, pattern, recursive));
+            if (self.fs.statSync(path).isDirectory() && recursive) files = files.concat(findSync(path, pattern, recursive));
 
-            if (!pattern || pattern.test(path$1)) {
-                files.push(path.normalize(path$1) + (self.fs.statSync(path$1).isDirectory() ? self.sep : ""));
+            if (!pattern || pattern.test(path)) {
+                files.push(node_path.normalize(path) + (self.fs.statSync(path).isDirectory() ? self.sep : ""));
             }
         });
         return files;
     }
 
-    return findSync(path$1, undefined, true);
+    return findSync(path, undefined, true);
 };
 
 Utils.prototype.getAttributes = function () {};
@@ -10066,24 +10070,24 @@ Utils.methodToString = function (/*Number*/ method) {
 };
 
 // removes ".." style path elements
-Utils.canonical = function (/*string*/ path$1) {
-    if (!path$1) return "";
+Utils.canonical = function (/*string*/ path) {
+    if (!path) return "";
     // trick normalize think path is absolute
-    var safeSuffix = path.posix.normalize("/" + path$1.split("\\").join("/"));
-    return path.join(".", safeSuffix);
+    var safeSuffix = node_path.posix.normalize("/" + path.split("\\").join("/"));
+    return node_path.join(".", safeSuffix);
 };
 
 // make abolute paths taking prefix as root folder
 Utils.sanitize = function (/*string*/ prefix, /*string*/ name) {
-    prefix = path.resolve(path.normalize(prefix));
+    prefix = node_path.resolve(node_path.normalize(prefix));
     var parts = name.split("/");
     for (var i = 0, l = parts.length; i < l; i++) {
-        var path$1 = path.normalize(path.join(prefix, parts.slice(i, l).join(path.sep)));
-        if (path$1.indexOf(prefix) === 0) {
-            return path$1;
+        var path = node_path.normalize(node_path.join(prefix, parts.slice(i, l).join(node_path.sep)));
+        if (path.indexOf(prefix) === 0) {
+            return path;
         }
     }
-    return path.normalize(path.join(prefix, path.basename(name)));
+    return node_path.normalize(node_path.join(prefix, node_path.basename(name)));
 };
 
 // converts buffer, Uint8Array, string types to buffer
@@ -10147,10 +10151,10 @@ var errors = {
 const fs = fileSystem.require();
 
 
-fs.existsSync = fs.existsSync || path.existsSync;
+fs.existsSync = fs.existsSync || node_path.existsSync;
 
-var fattr = function (/*String*/ path$1) {
-    var _path = path$1 || "",
+var fattr = function (/*String*/ path) {
+    var _path = path || "",
         _obj = newAttr(),
         _stat = null;
 
@@ -10172,7 +10176,7 @@ var fattr = function (/*String*/ path$1) {
         _obj.atime = _stat.atime;
         _obj.executable = (0o111 & _stat.mode) !== 0; // file is executable who ever har right not just owner
         _obj.readonly = (0o200 & _stat.mode) === 0; // readonly if owner has no write right
-        _obj.hidden = path.basename(_path)[0] === ".";
+        _obj.hidden = node_path.basename(_path)[0] === ".";
     } else {
         console.warn("Invalid path: " + _path);
     }
@@ -10224,15 +10228,15 @@ var fattr = function (/*String*/ path$1) {
     };
 };
 
-var util = utils$4;
-var Constants = constants;
+var util = utils;
+var Constants$3 = constants;
 var Errors$1 = errors;
 var FileAttr = fattr;
-util.Constants = Constants;
+util.Constants = Constants$3;
 util.Errors = Errors$1;
 util.FileAttr = FileAttr;
 
-var Constants$1 = util.Constants;
+var Constants$2 = util.Constants;
 
 /* The central directory file header */
 var entryHeader = function () {
@@ -10256,7 +10260,7 @@ var entryHeader = function () {
 
     // Set EFS flag since filename and comment fields are all by default encoded using UTF-8.
     // Without it file names may be corrupted for other apps when file names use unicode chars
-    _flags |= Constants$1.FLG_EFS;
+    _flags |= Constants$2.FLG_EFS;
 
     var _dataHeader = {};
 
@@ -10301,9 +10305,9 @@ var entryHeader = function () {
         },
         set method(val) {
             switch (val) {
-                case Constants$1.STORED:
+                case Constants$2.STORED:
                     this.version = 10;
-                case Constants$1.DEFLATED:
+                case Constants$2.DEFLATED:
                 default:
                     this.version = 20;
             }
@@ -10397,11 +10401,11 @@ var entryHeader = function () {
         },
 
         get entryHeaderSize() {
-            return Constants$1.CENHDR + _fnameLen + _extraLen + _comLen;
+            return Constants$2.CENHDR + _fnameLen + _extraLen + _comLen;
         },
 
         get realDataOffset() {
-            return _offset + Constants$1.LOCHDR + _dataHeader.fnameLen + _dataHeader.extraLen;
+            return _offset + Constants$2.LOCHDR + _dataHeader.fnameLen + _dataHeader.extraLen;
         },
 
         get dataHeader() {
@@ -10409,133 +10413,133 @@ var entryHeader = function () {
         },
 
         loadDataHeaderFromBinary: function (/*Buffer*/ input) {
-            var data = input.slice(_offset, _offset + Constants$1.LOCHDR);
+            var data = input.slice(_offset, _offset + Constants$2.LOCHDR);
             // 30 bytes and should start with "PK\003\004"
-            if (data.readUInt32LE(0) !== Constants$1.LOCSIG) {
+            if (data.readUInt32LE(0) !== Constants$2.LOCSIG) {
                 throw new Error(util.Errors.INVALID_LOC);
             }
             _dataHeader = {
                 // version needed to extract
-                version: data.readUInt16LE(Constants$1.LOCVER),
+                version: data.readUInt16LE(Constants$2.LOCVER),
                 // general purpose bit flag
-                flags: data.readUInt16LE(Constants$1.LOCFLG),
+                flags: data.readUInt16LE(Constants$2.LOCFLG),
                 // compression method
-                method: data.readUInt16LE(Constants$1.LOCHOW),
+                method: data.readUInt16LE(Constants$2.LOCHOW),
                 // modification time (2 bytes time, 2 bytes date)
-                time: data.readUInt32LE(Constants$1.LOCTIM),
+                time: data.readUInt32LE(Constants$2.LOCTIM),
                 // uncompressed file crc-32 value
-                crc: data.readUInt32LE(Constants$1.LOCCRC),
+                crc: data.readUInt32LE(Constants$2.LOCCRC),
                 // compressed size
-                compressedSize: data.readUInt32LE(Constants$1.LOCSIZ),
+                compressedSize: data.readUInt32LE(Constants$2.LOCSIZ),
                 // uncompressed size
-                size: data.readUInt32LE(Constants$1.LOCLEN),
+                size: data.readUInt32LE(Constants$2.LOCLEN),
                 // filename length
-                fnameLen: data.readUInt16LE(Constants$1.LOCNAM),
+                fnameLen: data.readUInt16LE(Constants$2.LOCNAM),
                 // extra field length
-                extraLen: data.readUInt16LE(Constants$1.LOCEXT)
+                extraLen: data.readUInt16LE(Constants$2.LOCEXT)
             };
         },
 
         loadFromBinary: function (/*Buffer*/ data) {
             // data should be 46 bytes and start with "PK 01 02"
-            if (data.length !== Constants$1.CENHDR || data.readUInt32LE(0) !== Constants$1.CENSIG) {
+            if (data.length !== Constants$2.CENHDR || data.readUInt32LE(0) !== Constants$2.CENSIG) {
                 throw new Error(util.Errors.INVALID_CEN);
             }
             // version made by
-            _verMade = data.readUInt16LE(Constants$1.CENVEM);
+            _verMade = data.readUInt16LE(Constants$2.CENVEM);
             // version needed to extract
-            _version = data.readUInt16LE(Constants$1.CENVER);
+            _version = data.readUInt16LE(Constants$2.CENVER);
             // encrypt, decrypt flags
-            _flags = data.readUInt16LE(Constants$1.CENFLG);
+            _flags = data.readUInt16LE(Constants$2.CENFLG);
             // compression method
-            _method = data.readUInt16LE(Constants$1.CENHOW);
+            _method = data.readUInt16LE(Constants$2.CENHOW);
             // modification time (2 bytes time, 2 bytes date)
-            _time = data.readUInt32LE(Constants$1.CENTIM);
+            _time = data.readUInt32LE(Constants$2.CENTIM);
             // uncompressed file crc-32 value
-            _crc = data.readUInt32LE(Constants$1.CENCRC);
+            _crc = data.readUInt32LE(Constants$2.CENCRC);
             // compressed size
-            _compressedSize = data.readUInt32LE(Constants$1.CENSIZ);
+            _compressedSize = data.readUInt32LE(Constants$2.CENSIZ);
             // uncompressed size
-            _size = data.readUInt32LE(Constants$1.CENLEN);
+            _size = data.readUInt32LE(Constants$2.CENLEN);
             // filename length
-            _fnameLen = data.readUInt16LE(Constants$1.CENNAM);
+            _fnameLen = data.readUInt16LE(Constants$2.CENNAM);
             // extra field length
-            _extraLen = data.readUInt16LE(Constants$1.CENEXT);
+            _extraLen = data.readUInt16LE(Constants$2.CENEXT);
             // file comment length
-            _comLen = data.readUInt16LE(Constants$1.CENCOM);
+            _comLen = data.readUInt16LE(Constants$2.CENCOM);
             // volume number start
-            _diskStart = data.readUInt16LE(Constants$1.CENDSK);
+            _diskStart = data.readUInt16LE(Constants$2.CENDSK);
             // internal file attributes
-            _inattr = data.readUInt16LE(Constants$1.CENATT);
+            _inattr = data.readUInt16LE(Constants$2.CENATT);
             // external file attributes
-            _attr = data.readUInt32LE(Constants$1.CENATX);
+            _attr = data.readUInt32LE(Constants$2.CENATX);
             // LOC header offset
-            _offset = data.readUInt32LE(Constants$1.CENOFF);
+            _offset = data.readUInt32LE(Constants$2.CENOFF);
         },
 
         dataHeaderToBinary: function () {
             // LOC header size (30 bytes)
-            var data = Buffer.alloc(Constants$1.LOCHDR);
+            var data = Buffer.alloc(Constants$2.LOCHDR);
             // "PK\003\004"
-            data.writeUInt32LE(Constants$1.LOCSIG, 0);
+            data.writeUInt32LE(Constants$2.LOCSIG, 0);
             // version needed to extract
-            data.writeUInt16LE(_version, Constants$1.LOCVER);
+            data.writeUInt16LE(_version, Constants$2.LOCVER);
             // general purpose bit flag
-            data.writeUInt16LE(_flags, Constants$1.LOCFLG);
+            data.writeUInt16LE(_flags, Constants$2.LOCFLG);
             // compression method
-            data.writeUInt16LE(_method, Constants$1.LOCHOW);
+            data.writeUInt16LE(_method, Constants$2.LOCHOW);
             // modification time (2 bytes time, 2 bytes date)
-            data.writeUInt32LE(_time, Constants$1.LOCTIM);
+            data.writeUInt32LE(_time, Constants$2.LOCTIM);
             // uncompressed file crc-32 value
-            data.writeUInt32LE(_crc, Constants$1.LOCCRC);
+            data.writeUInt32LE(_crc, Constants$2.LOCCRC);
             // compressed size
-            data.writeUInt32LE(_compressedSize, Constants$1.LOCSIZ);
+            data.writeUInt32LE(_compressedSize, Constants$2.LOCSIZ);
             // uncompressed size
-            data.writeUInt32LE(_size, Constants$1.LOCLEN);
+            data.writeUInt32LE(_size, Constants$2.LOCLEN);
             // filename length
-            data.writeUInt16LE(_fnameLen, Constants$1.LOCNAM);
+            data.writeUInt16LE(_fnameLen, Constants$2.LOCNAM);
             // extra field length
-            data.writeUInt16LE(_extraLen, Constants$1.LOCEXT);
+            data.writeUInt16LE(_extraLen, Constants$2.LOCEXT);
             return data;
         },
 
         entryHeaderToBinary: function () {
             // CEN header size (46 bytes)
-            var data = Buffer.alloc(Constants$1.CENHDR + _fnameLen + _extraLen + _comLen);
+            var data = Buffer.alloc(Constants$2.CENHDR + _fnameLen + _extraLen + _comLen);
             // "PK\001\002"
-            data.writeUInt32LE(Constants$1.CENSIG, 0);
+            data.writeUInt32LE(Constants$2.CENSIG, 0);
             // version made by
-            data.writeUInt16LE(_verMade, Constants$1.CENVEM);
+            data.writeUInt16LE(_verMade, Constants$2.CENVEM);
             // version needed to extract
-            data.writeUInt16LE(_version, Constants$1.CENVER);
+            data.writeUInt16LE(_version, Constants$2.CENVER);
             // encrypt, decrypt flags
-            data.writeUInt16LE(_flags, Constants$1.CENFLG);
+            data.writeUInt16LE(_flags, Constants$2.CENFLG);
             // compression method
-            data.writeUInt16LE(_method, Constants$1.CENHOW);
+            data.writeUInt16LE(_method, Constants$2.CENHOW);
             // modification time (2 bytes time, 2 bytes date)
-            data.writeUInt32LE(_time, Constants$1.CENTIM);
+            data.writeUInt32LE(_time, Constants$2.CENTIM);
             // uncompressed file crc-32 value
-            data.writeUInt32LE(_crc, Constants$1.CENCRC);
+            data.writeUInt32LE(_crc, Constants$2.CENCRC);
             // compressed size
-            data.writeUInt32LE(_compressedSize, Constants$1.CENSIZ);
+            data.writeUInt32LE(_compressedSize, Constants$2.CENSIZ);
             // uncompressed size
-            data.writeUInt32LE(_size, Constants$1.CENLEN);
+            data.writeUInt32LE(_size, Constants$2.CENLEN);
             // filename length
-            data.writeUInt16LE(_fnameLen, Constants$1.CENNAM);
+            data.writeUInt16LE(_fnameLen, Constants$2.CENNAM);
             // extra field length
-            data.writeUInt16LE(_extraLen, Constants$1.CENEXT);
+            data.writeUInt16LE(_extraLen, Constants$2.CENEXT);
             // file comment length
-            data.writeUInt16LE(_comLen, Constants$1.CENCOM);
+            data.writeUInt16LE(_comLen, Constants$2.CENCOM);
             // volume number start
-            data.writeUInt16LE(_diskStart, Constants$1.CENDSK);
+            data.writeUInt16LE(_diskStart, Constants$2.CENDSK);
             // internal file attributes
-            data.writeUInt16LE(_inattr, Constants$1.CENATT);
+            data.writeUInt16LE(_inattr, Constants$2.CENATT);
             // external file attributes
-            data.writeUInt32LE(_attr, Constants$1.CENATX);
+            data.writeUInt32LE(_attr, Constants$2.CENATX);
             // LOC header offset
-            data.writeUInt32LE(_offset, Constants$1.CENOFF);
+            data.writeUInt32LE(_offset, Constants$2.CENOFF);
             // fill all with
-            data.fill(0x00, Constants$1.CENHDR);
+            data.fill(0x00, Constants$2.CENHDR);
             return data;
         },
 
@@ -10560,7 +10564,7 @@ var entryHeader = function () {
                 inAttr: _inattr,
                 attr: _attr,
                 offset: _offset,
-                entryHeaderSize: bytes(Constants$1.CENHDR + _fnameLen + _extraLen + _comLen)
+                entryHeaderSize: bytes(Constants$2.CENHDR + _fnameLen + _extraLen + _comLen)
             };
         },
 
@@ -10570,7 +10574,7 @@ var entryHeader = function () {
     };
 };
 
-var Constants$2 = util.Constants;
+var Constants$1 = util.Constants;
 
 /* The entries in the end of central directory */
 var mainHeader = function () {
@@ -10617,61 +10621,61 @@ var mainHeader = function () {
         },
 
         get mainHeaderSize() {
-            return Constants$2.ENDHDR + _commentLength;
+            return Constants$1.ENDHDR + _commentLength;
         },
 
         loadFromBinary: function (/*Buffer*/ data) {
             // data should be 22 bytes and start with "PK 05 06"
             // or be 56+ bytes and start with "PK 06 06" for Zip64
             if (
-                (data.length !== Constants$2.ENDHDR || data.readUInt32LE(0) !== Constants$2.ENDSIG) &&
-                (data.length < Constants$2.ZIP64HDR || data.readUInt32LE(0) !== Constants$2.ZIP64SIG)
+                (data.length !== Constants$1.ENDHDR || data.readUInt32LE(0) !== Constants$1.ENDSIG) &&
+                (data.length < Constants$1.ZIP64HDR || data.readUInt32LE(0) !== Constants$1.ZIP64SIG)
             ) {
                 throw new Error(util.Errors.INVALID_END);
             }
 
-            if (data.readUInt32LE(0) === Constants$2.ENDSIG) {
+            if (data.readUInt32LE(0) === Constants$1.ENDSIG) {
                 // number of entries on this volume
-                _volumeEntries = data.readUInt16LE(Constants$2.ENDSUB);
+                _volumeEntries = data.readUInt16LE(Constants$1.ENDSUB);
                 // total number of entries
-                _totalEntries = data.readUInt16LE(Constants$2.ENDTOT);
+                _totalEntries = data.readUInt16LE(Constants$1.ENDTOT);
                 // central directory size in bytes
-                _size = data.readUInt32LE(Constants$2.ENDSIZ);
+                _size = data.readUInt32LE(Constants$1.ENDSIZ);
                 // offset of first CEN header
-                _offset = data.readUInt32LE(Constants$2.ENDOFF);
+                _offset = data.readUInt32LE(Constants$1.ENDOFF);
                 // zip file comment length
-                _commentLength = data.readUInt16LE(Constants$2.ENDCOM);
+                _commentLength = data.readUInt16LE(Constants$1.ENDCOM);
             } else {
                 // number of entries on this volume
-                _volumeEntries = util.readBigUInt64LE(data, Constants$2.ZIP64SUB);
+                _volumeEntries = util.readBigUInt64LE(data, Constants$1.ZIP64SUB);
                 // total number of entries
-                _totalEntries = util.readBigUInt64LE(data, Constants$2.ZIP64TOT);
+                _totalEntries = util.readBigUInt64LE(data, Constants$1.ZIP64TOT);
                 // central directory size in bytes
-                _size = util.readBigUInt64LE(data, Constants$2.ZIP64SIZ);
+                _size = util.readBigUInt64LE(data, Constants$1.ZIP64SIZ);
                 // offset of first CEN header
-                _offset = util.readBigUInt64LE(data, Constants$2.ZIP64OFF);
+                _offset = util.readBigUInt64LE(data, Constants$1.ZIP64OFF);
 
                 _commentLength = 0;
             }
         },
 
         toBinary: function () {
-            var b = Buffer.alloc(Constants$2.ENDHDR + _commentLength);
+            var b = Buffer.alloc(Constants$1.ENDHDR + _commentLength);
             // "PK 05 06" signature
-            b.writeUInt32LE(Constants$2.ENDSIG, 0);
+            b.writeUInt32LE(Constants$1.ENDSIG, 0);
             b.writeUInt32LE(0, 4);
             // number of entries on this volume
-            b.writeUInt16LE(_volumeEntries, Constants$2.ENDSUB);
+            b.writeUInt16LE(_volumeEntries, Constants$1.ENDSUB);
             // total number of entries
-            b.writeUInt16LE(_totalEntries, Constants$2.ENDTOT);
+            b.writeUInt16LE(_totalEntries, Constants$1.ENDTOT);
             // central directory size in bytes
-            b.writeUInt32LE(_size, Constants$2.ENDSIZ);
+            b.writeUInt32LE(_size, Constants$1.ENDSIZ);
             // offset of first CEN header
-            b.writeUInt32LE(_offset, Constants$2.ENDOFF);
+            b.writeUInt32LE(_offset, Constants$1.ENDOFF);
             // zip file comment length
-            b.writeUInt16LE(_commentLength, Constants$2.ENDCOM);
+            b.writeUInt16LE(_commentLength, Constants$1.ENDCOM);
             // fill comment memory with spaces so no garbage is left there
-            b.fill(" ", Constants$2.ENDHDR);
+            b.fill(" ", Constants$1.ENDHDR);
 
             return b;
         },
@@ -10952,7 +10956,7 @@ var methods = {
 	ZipCrypto: ZipCrypto
 };
 
-var Constants$3 = util.Constants;
+var Constants = util.Constants;
 
 var zipEntry = function (/*Buffer*/ input) {
     var _entryHeader = new headers.EntryHeader(),
@@ -11106,7 +11110,7 @@ var zipEntry = function (/*Buffer*/ input) {
             offset += 2;
             part = data.slice(offset, offset + size);
             offset += size;
-            if (Constants$3.ID_ZIP64 === signature) {
+            if (Constants.ID_ZIP64 === signature) {
                 parseZip64ExtendedInformation(part);
             }
         }
@@ -11116,27 +11120,27 @@ var zipEntry = function (/*Buffer*/ input) {
     function parseZip64ExtendedInformation(data) {
         var size, compressedSize, offset, diskNumStart;
 
-        if (data.length >= Constants$3.EF_ZIP64_SCOMP) {
-            size = readUInt64LE(data, Constants$3.EF_ZIP64_SUNCOMP);
-            if (_entryHeader.size === Constants$3.EF_ZIP64_OR_32) {
+        if (data.length >= Constants.EF_ZIP64_SCOMP) {
+            size = readUInt64LE(data, Constants.EF_ZIP64_SUNCOMP);
+            if (_entryHeader.size === Constants.EF_ZIP64_OR_32) {
                 _entryHeader.size = size;
             }
         }
-        if (data.length >= Constants$3.EF_ZIP64_RHO) {
-            compressedSize = readUInt64LE(data, Constants$3.EF_ZIP64_SCOMP);
-            if (_entryHeader.compressedSize === Constants$3.EF_ZIP64_OR_32) {
+        if (data.length >= Constants.EF_ZIP64_RHO) {
+            compressedSize = readUInt64LE(data, Constants.EF_ZIP64_SCOMP);
+            if (_entryHeader.compressedSize === Constants.EF_ZIP64_OR_32) {
                 _entryHeader.compressedSize = compressedSize;
             }
         }
-        if (data.length >= Constants$3.EF_ZIP64_DSN) {
-            offset = readUInt64LE(data, Constants$3.EF_ZIP64_RHO);
-            if (_entryHeader.offset === Constants$3.EF_ZIP64_OR_32) {
+        if (data.length >= Constants.EF_ZIP64_DSN) {
+            offset = readUInt64LE(data, Constants.EF_ZIP64_RHO);
+            if (_entryHeader.offset === Constants.EF_ZIP64_OR_32) {
                 _entryHeader.offset = offset;
             }
         }
-        if (data.length >= Constants$3.EF_ZIP64_DSN + 4) {
-            diskNumStart = data.readUInt32LE(Constants$3.EF_ZIP64_DSN);
-            if (_entryHeader.diskNumStart === Constants$3.EF_ZIP64_OR_16) {
+        if (data.length >= Constants.EF_ZIP64_DSN + 4) {
+            diskNumStart = data.readUInt32LE(Constants.EF_ZIP64_DSN);
+            if (_entryHeader.diskNumStart === Constants.EF_ZIP64_OR_16) {
                 _entryHeader.diskNumStart = diskNumStart;
             }
         }
@@ -11736,7 +11740,7 @@ var admZip = function (/**String*/ input, /** object */ options) {
     }
 
     function fixPath(zipPath) {
-        const { join, normalize, sep } = path.posix;
+        const { join, normalize, sep } = node_path.posix;
         // convert windows file separators and normalize
         return join(".", normalize(sep + zipPath.split("\\").join(sep) + sep));
     }
@@ -11944,7 +11948,7 @@ var admZip = function (/**String*/ input, /** object */ options) {
             zipPath = zipPath ? fixPath(zipPath) : "";
 
             // normalize the path first
-            localPath = path.normalize(localPath);
+            localPath = node_path.normalize(localPath);
 
             if (filetools.fs.existsSync(localPath)) {
                 const items = filetools.findFiles(localPath);
@@ -11952,7 +11956,7 @@ var admZip = function (/**String*/ input, /** object */ options) {
 
                 if (items.length) {
                     items.forEach(function (filepath) {
-                        var p = path.relative(localPath, filepath).split("\\").join("/"); //windows fix
+                        var p = node_path.relative(localPath, filepath).split("\\").join("/"); //windows fix
                         if (filter(p)) {
                             var stats = filetools.fs.statSync(filepath);
                             if (stats.isFile()) {
@@ -11993,7 +11997,7 @@ var admZip = function (/**String*/ input, /** object */ options) {
             zipPath = zipPath ? fixPath(zipPath) : "";
 
             // normalize the path first
-            localPath = path.normalize(localPath);
+            localPath = node_path.normalize(localPath);
 
             var self = this;
             filetools.fs.open(localPath, "r", function (err) {
@@ -12009,7 +12013,7 @@ var admZip = function (/**String*/ input, /** object */ options) {
                         i += 1;
                         if (i < items.length) {
                             var filepath = items[i];
-                            var p = path.relative(localPath, filepath).split("\\").join("/"); //windows fix
+                            var p = node_path.relative(localPath, filepath).split("\\").join("/"); //windows fix
                             p = p
                                 .normalize("NFD")
                                 .replace(/[\u0300-\u036f]/g, "")
@@ -12185,7 +12189,7 @@ var admZip = function (/**String*/ input, /** object */ options) {
 
             var entryName = canonical(item.entryName);
 
-            var target = sanitize(targetPath, outFileName && !item.isDirectory ? outFileName : maintainEntryPath ? entryName : path.basename(entryName));
+            var target = sanitize(targetPath, outFileName && !item.isDirectory ? outFileName : maintainEntryPath ? entryName : node_path.basename(entryName));
 
             if (item.isDirectory) {
                 var children = _zip.getEntryChildren(item);
@@ -12196,7 +12200,7 @@ var admZip = function (/**String*/ input, /** object */ options) {
                         throw new Error(util.Errors.CANT_EXTRACT_FILE);
                     }
                     var name = canonical(child.entryName);
-                    var childName = sanitize(targetPath, maintainEntryPath ? name : path.basename(name));
+                    var childName = sanitize(targetPath, maintainEntryPath ? name : node_path.basename(name));
                     // The reverse operation for attr depend on method addFile()
                     const fileAttr = keepOriginalPermission ? child.header.fileAttr : undefined;
                     filetools.writeFileTo(childName, content, overwrite, fileAttr);
@@ -12301,9 +12305,9 @@ var admZip = function (/**String*/ input, /** object */ options) {
                 return;
             }
 
-            targetPath = path.resolve(targetPath);
+            targetPath = node_path.resolve(targetPath);
             // convert entryName to
-            const getPath = (entry) => sanitize(targetPath, path.normalize(canonical(entry.entryName.toString())));
+            const getPath = (entry) => sanitize(targetPath, node_path.normalize(canonical(entry.entryName.toString())));
             const getError = (msg, file) => new Error(msg + ': "' + file + '"');
 
             // separate directories from files
@@ -12342,7 +12346,7 @@ var admZip = function (/**String*/ input, /** object */ options) {
 
             // Extract file entries asynchronously
             for (const entry of fileEntries.values()) {
-                const entryName = path.normalize(canonical(entry.entryName.toString()));
+                const entryName = node_path.normalize(canonical(entry.entryName.toString()));
                 const filePath = sanitize(targetPath, entryName);
                 entry.getDataAsync(function (content, err_1) {
                     if (err_1) {
@@ -12768,7 +12772,7 @@ async function downloadBaseArtifact(
 	const adm = new admZip(Buffer.from(/**@type {any}*/ (zip.data)));
 	adm.getEntries().forEach((entry) => {
 		const action = entry.isDirectory ? "creating" : "inflating";
-		const filepath = path.join(inputPath, entry.entryName);
+		const filepath = node_path.join(inputPath, entry.entryName);
 		log.info(`  ${action}: ${filepath}`);
 	});
 

@@ -39,8 +39,8 @@
     "husky": "^8.0.1",
     "lint-staged": "^13.0.3",
     "prettier": "^2.7.1",
-    "rollup": "^2.21.0",
-    "rollup-plugin-node-externals": "^2.2.0",
+    "rollup": "^2.60.0",
+    "rollup-plugin-node-externals": "^5.0.1",
     "uvu": "^0.5.6"
   }
 }
