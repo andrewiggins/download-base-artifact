@@ -9,11 +9,11 @@ module.exports = {
 		format: "esm",
 	},
 	plugins: [
-		nodeResolve(),
 		commonjs({
 			// Ignore Electron support in adm-zip
 			ignore: ["original-fs"],
 		}),
+		nodeResolve(),
 		nodeExternals({
 			deps: false,
 		}),

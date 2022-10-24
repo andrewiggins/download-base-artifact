@@ -17,10 +17,6 @@ import node_crypto from 'node:crypto';
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-function unwrapExports (x) {
-	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-}
-
 function createCommonjsModule(fn, basedir, module) {
 	return module = {
 	  path: basedir,
@@ -2613,8 +2609,6 @@ Object.defineProperty(exports, "toWin32Path", { enumerable: true, get: function 
 Object.defineProperty(exports, "toPlatformPath", { enumerable: true, get: function () { return pathUtils.toPlatformPath; } });
 
 });
-
-var core$1 = /*@__PURE__*/unwrapExports(core);
 
 var context = createCommonjsModule(function (module, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -9882,8 +9876,6 @@ exports.getOctokit = getOctokit;
 
 });
 
-var github$1 = /*@__PURE__*/unwrapExports(github);
-
 const BYTE_UNITS = [
 	'B',
 	'kB',
@@ -13081,42 +13073,42 @@ async function downloadBaseArtifact(
 	let required = true;
 
 	try {
-		const token = core$1.getInput("github_token", { required: true });
-		const workflow = core$1.getInput("workflow", { required: false });
-		const artifact = core$1.getInput("artifact", { required: true });
-		const path = core$1.getInput("path", { required: false });
-		required = core$1.getInput("required", { required: false }) === "true";
-		const baseRef = core$1.getInput("baseRef", { required: false });
-		const baseSha = core$1.getInput("baseSha", { required: false });
+		const token = core.getInput("github_token", { required: true });
+		const workflow = core.getInput("workflow", { required: false });
+		const artifact = core.getInput("artifact", { required: true });
+		const path = core.getInput("path", { required: false });
+		required = core.getInput("required", { required: false }) === "true";
+		const baseRef = core.getInput("baseRef", { required: false });
+		const baseSha = core.getInput("baseSha", { required: false });
 
-		const octokit = github$1.getOctokit(token);
+		const octokit = github.getOctokit(token);
 		const inputs = { workflow, artifact, path, baseRef, baseSha };
 
-		core$1.debug("Required: " + required);
-		core$1.debug("Inputs: " + JSON.stringify(inputs, null, 2));
-		core$1.debug("Context: " + JSON.stringify(github$1.context, undefined, 2));
+		core.debug("Required: " + required);
+		core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
+		core.debug("Context: " + JSON.stringify(github.context, undefined, 2));
 
 		const actionLogger = {
 			warn(msg) {
-				core$1.warning(msg);
+				core.warning(msg);
 			},
 			info(msg) {
-				core$1.info(msg);
+				core.info(msg);
 			},
 			debug(getMsg) {
-				core$1.debug(getMsg());
+				core.debug(getMsg());
 			},
 		};
 
-		await downloadBaseArtifact(octokit, github$1.context, inputs, actionLogger);
+		await downloadBaseArtifact(octokit, github.context, inputs, actionLogger);
 	} catch (e) {
 		if (required) {
-			core$1.setFailed(e.message);
+			core.setFailed(e.message);
 		} else {
-			core$1.info(
+			core.info(
 				`Error was thrown but "required" input is set to false so ignoring it. See below for error.`
 			);
-			core$1.info(e.toString());
+			core.info(e.toString());
 		}
 	}
 })();
