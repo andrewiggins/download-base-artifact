@@ -34,14 +34,21 @@ jobs:
       - name: Download Base Artifact
         uses: ./
         with:
+          artifact: "test-artifact.txt"
+          path: base
+          required: ${{ !inputs.regenerate }}
+      - name: Download not-required non-existent artifact
+        uses: ./
+        with:
           artifact: "non-existent-artifact.txt"
           path: base2
           required: false
-      - name: Download Base Artifact
+      - name: Download artifact from baseRef input
         uses: ./
         with:
           artifact: "test-artifact.txt"
-          path: base
+          path: base3
+          baseRef: main
           required: ${{ !inputs.regenerate }}
       - run: ls -al
       - run: ls -al base
