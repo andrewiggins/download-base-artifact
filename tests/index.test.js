@@ -75,11 +75,11 @@ const testRepo = {
 };
 
 const workflowId = 1827281;
-const runId = 3310300652;
-const commitSha = "6e60998db346a1acaee4b470b4142d00dfc979ee";
-const gitRef = "refs/heads/master";
+const runId = 6704550515;
+const commitSha = "9f03bd80e68a00a6eba6c4a81fb8f3d70857b7d6";
+const gitRef = "refs/heads/main";
 const artifactName = "test-artifact.txt";
-const artifactId = 408992374;
+const artifactId = 1018547349;
 
 const prBranch = "test-branch";
 const prSha = "62722153c751ecd3676c48fb43a42869f39ed9e2";

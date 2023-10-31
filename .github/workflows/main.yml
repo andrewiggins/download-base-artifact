@@ -7,6 +7,10 @@ on:
         description: "Just regenerate artifacts. Turn on if all run artifacts have expired."
         type: boolean
         default: false
+      baseRef:
+        description: "Base ref to download artifacts from. Defaults to main."
+        type: string
+        default: main
   pull_request:
     branches:
       - "**"
@@ -48,7 +52,7 @@ jobs:
         with:
           artifact: "test-artifact.txt"
           path: base3
-          baseRef: main
+          baseRef: ${{ inputs.baseRef || 'main' }}
           required: ${{ !inputs.regenerate }}
       - run: ls -al
       - run: ls -al base
