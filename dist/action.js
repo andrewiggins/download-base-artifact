@@ -31559,23 +31559,25 @@ async function getGitRef(client, repo, ref, logger) {
 		} else {
 			return [sha, ref.replace(/^heads\//, "")];
 		}
-	} catch (e) {
-		logger.info(`Unable to resolve ref as-is: "${ref}"`);
-	}
+	} catch (e) {}
 
 	// Try again prefixing with "heads/" for branch name
+	const branchRef = `heads/${ref}`;
+	logger.info(
+		`Unable to resolve ref as-is: "${ref}". Trying as branch ref "${branchRef}"...`,
+	);
 	try {
 		const sha = await client.rest.git
-			.getRef({ ...repo, ref: `heads/${ref}` })
+			.getRef({ ...repo, ref: branchRef })
 			.then((r) => r.data.object.sha);
 
 		// Successfully resolved ref to sha. Return it.
 		return [sha, ref];
-	} catch (e) {
-		logger.info(`Unable to resolve ref as branch: "heads/${ref}"`);
-	}
+	} catch (e) {}
 
 	// Try again prefixing with "tags/" for tag name
+	const tagRef = `tags/${ref}`;
+	logger.info(`Unable to resolve ref as branch. Trying as tag "${tagRef}"...`);
 	try {
 		const sha = await client.rest.git
 			.getRef({ ...repo, ref: `tags/${ref}` })
@@ -31583,23 +31585,23 @@ async function getGitRef(client, repo, ref, logger) {
 
 		// Successfully resolved ref to sha. Return it.
 		return [sha, undefined];
-	} catch (e) {
-		logger.info(`Unable to resolve ref as tag: "tags/${ref}"`);
-	}
+	} catch (e) {}
 
 	// Try resolving ref as a commit
+	const commitRef = ref;
+	logger.info(`Unable to resolve ref as tag. Trying as commit sha...`);
 	try {
 		const sha = await client.rest.git
 			.getCommit({
 				...repo,
-				commit_sha: ref,
+				commit_sha: commitRef,
 			})
 			.then((r) => r.data.sha);
 
 		// Successfully resolve ref as a commit sha. Return it.
 		return [sha, undefined];
 	} catch {
-		logger.info(`Unable to resolve ref as commit sha: "${ref}"`);
+		logger.info(`Unable to resolve ref as commit sha."`);
 	}
 
 	logger.warn(
