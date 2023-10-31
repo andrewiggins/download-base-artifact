@@ -10,7 +10,8 @@ import { downloadBaseArtifact } from "./index.js";
 		const workflow = core.getInput("workflow", { required: false });
 		const artifact = core.getInput("artifact", { required: true });
 		const path = core.getInput("path", { required: false });
-		required = core.getInput("required", { required: false }) === "true";
+		required =
+			core.getInput("required", { required: false })?.toLowerCase() === "true";
 		const baseRef = core.getInput("baseRef", { required: false });
 		const baseSha = core.getInput("baseSha", { required: false });
 

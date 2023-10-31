@@ -12,7 +12,6 @@ inputs:
   workflow:
     description: "The workflow file name that generates the desired artifact. Defaults to the current workflow."
     required: false
-    default: null
   artifact:
     description: "The name of the artifact to download"
     required: true
@@ -22,7 +21,6 @@ inputs:
   required:
     description: "If required, this action will fail if a matching artifact cannot be found"
     required: false
-    default: true
   baseRef:
     description: "The git ref that contains the base commit whose artifact is to be downloaded"
     required: false
