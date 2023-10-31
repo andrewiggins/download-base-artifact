@@ -5,14 +5,16 @@ import {
 	ActionsGetArtifactResponseData,
 } from "@octokit/types";
 
-export type WorkflowData = ActionsGetWorkflowResponseData;
-export type WorkflowRunData = ActionsGetWorkflowRunResponseData;
-export type ArtifactData = ActionsGetArtifactResponseData;
+declare global {
+	export type WorkflowData = ActionsGetWorkflowResponseData;
+	export type WorkflowRunData = ActionsGetWorkflowRunResponseData;
+	export type ArtifactData = ActionsGetArtifactResponseData;
 
-export type WorkflowRunsAsyncIterator = AsyncIterableIterator<
-	OctokitResponse<WorkflowRunData[]>
->;
+	export type WorkflowRunsAsyncIterator = AsyncIterableIterator<
+		OctokitResponse<WorkflowRunData[]>
+	>;
 
-export type ArtifactsAsyncIterator = AsyncIterableIterator<
-	OctokitResponse<ActionsGetArtifactResponseData[]>
->;
+	export type ArtifactsAsyncIterator = AsyncIterableIterator<
+		OctokitResponse<ActionsGetArtifactResponseData[]>
+	>;
+}

@@ -7,7 +7,8 @@
   "scripts": {
     "prepare": "husky install",
     "build": "rollup -c ./rollup.config.js",
-    "test": "node tests/index.test.js"
+    "test": "node tests/index.test.js",
+    "tsc": "tsc -p jsconfig.json"
   },
   "repository": {
     "type": "git",
@@ -37,11 +38,13 @@
     "@rollup/plugin-commonjs": "^23.0.2",
     "@rollup/plugin-json": "^5.0.1",
     "@rollup/plugin-node-resolve": "^15.0.1",
+    "@types/adm-zip": "^0.5.3",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.3",
     "prettier": "^2.7.1",
     "rollup": "^3.2.3",
     "rollup-plugin-node-externals": "^5.0.1",
+    "typescript": "^5.2.2",
     "uvu": "^0.5.6"
   }
 }

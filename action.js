@@ -1,6 +1,6 @@
 import core from "@actions/core";
 import github from "@actions/github";
-import { downloadBaseArtifact } from "./index";
+import { downloadBaseArtifact } from "./index.js";
 
 (async () => {
 	let required = true;
@@ -21,6 +21,7 @@ import { downloadBaseArtifact } from "./index";
 		core.debug("Inputs: " + JSON.stringify(inputs, null, 2));
 		core.debug("Context: " + JSON.stringify(github.context, undefined, 2));
 
+		/** @type {import ('./index.js').Logger} */
 		const actionLogger = {
 			warn(msg) {
 				core.warning(msg);

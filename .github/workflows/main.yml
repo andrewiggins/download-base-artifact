@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       all_optional:
-        description: 'Make all artifacts optional. Turn on if all run artifacts have expired.'
+        description: "Make all artifacts optional. Turn on if all run artifacts have expired."
         type: boolean
         default: false
   pull_request:
@@ -24,6 +24,7 @@ jobs:
           node-version: 16
       - run: npm ci
       - run: npm test
+      - run: npm run tsc
       - run: echo "$GITHUB_RUN_NUMBER 1" > test-artifact.txt
       - run: echo "$GITHUB_RUN_NUMBER 2" > test-artifact-2.txt
       - run: ls -al

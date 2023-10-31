@@ -9,7 +9,7 @@ import AdmZip from "adm-zip";
  * @param {GitHubActionClient} client
  * @param {GitHubRepo} repo
  * @param {number} run_id
- * @returns {Promise<import('./global').WorkflowData>}
+ * @returns {Promise<WorkflowData>}
  */
 export async function getWorkflowFromRunId(client, repo, run_id) {
 	const runResponse = await client.rest.actions.getWorkflowRun({
@@ -28,7 +28,7 @@ export async function getWorkflowFromRunId(client, repo, run_id) {
  * @param {GitHubActionClient} client
  * @param {GitHubRepo} repo
  * @param {string} file
- * @returns {Promise<import('./global').WorkflowData>}
+ * @returns {Promise<WorkflowData>}
  */
 export async function getWorkflowFromFile(client, repo, file) {
 	try {
@@ -55,7 +55,7 @@ export async function getWorkflowFromFile(client, repo, file) {
  * @param {number} workflow_id The ID of the workflow whose runs to search
  * @param {string} commit Commit to look for a workflow run
  * @param {string} [ref] Branch commit should be found on
- * @returns {Promise<[import('./global').WorkflowRunData | undefined, import('./global').WorkflowRunData | undefined]>}
+ * @returns {Promise<[WorkflowRunData | undefined, WorkflowRunData | undefined]>}
  */
 export async function getWorkflowRunForCommit(
 	client,
@@ -64,9 +64,9 @@ export async function getWorkflowRunForCommit(
 	commit,
 	ref
 ) {
-	/** @type {import('./global').WorkflowRunData | undefined} */
+	/** @type {WorkflowRunData | undefined} */
 	let runForCommit;
-	/** @type {import('./global').WorkflowRunData | undefined} */
+	/** @type {WorkflowRunData | undefined} */
 	let lkgRun;
 
 	// https://docs.github.com/en/rest/reference/actions#list-workflow-runs
@@ -78,7 +78,7 @@ export async function getWorkflowRunForCommit(
 
 	const endpoint = client.rest.actions.listWorkflowRuns.endpoint(params);
 
-	/** @type {import('./global').WorkflowRunsAsyncIterator} */
+	/** @type {WorkflowRunsAsyncIterator} */
 	const iterator = client.paginate.iterator(endpoint);
 	paging: for await (const page of iterator) {
 		if (page.status > 299) {
@@ -111,10 +111,10 @@ export async function getWorkflowRunForCommit(
  * @param {GitHubRepo} repo
  * @param {number} run_id
  * @param {string} artifactName
- * @returns {Promise<import('./global').ArtifactData | undefined>}
+ * @returns {Promise<ArtifactData | undefined>}
  */
 export async function getArtifact(client, repo, run_id, artifactName) {
-	/** @type {import('./global').ArtifactData | undefined} */
+	/** @type {ArtifactData | undefined} */
 	let artifact;
 
 	const endpoint = client.rest.actions.listWorkflowRunArtifacts.endpoint({
@@ -122,7 +122,7 @@ export async function getArtifact(client, repo, run_id, artifactName) {
 		run_id,
 	});
 
-	/** @type {import('./global').ArtifactsAsyncIterator} */
+	/** @type {ArtifactsAsyncIterator} */
 	const iterator = client.paginate.iterator(endpoint);
 	for await (let page of iterator) {
 		if (page.status > 299) {
@@ -140,6 +140,7 @@ export async function getArtifact(client, repo, run_id, artifactName) {
 	return artifact;
 }
 
+/** @type {Logger} */
 const defaultLogger = {
 	warn(getMsg) {
 		console.warn(getMsg);
@@ -184,7 +185,7 @@ export async function downloadBaseArtifact(
 	}
 
 	// 1. Determine workflow
-	/** @type {import('./global').WorkflowData} */
+	/** @type {WorkflowData} */
 	let workflow;
 	if (inputs.workflow) {
 		log.info(`Trying to get workflow matching "${inputs.workflow}"...`);
@@ -198,7 +199,10 @@ export async function downloadBaseArtifact(
 	log.info(`Resolved to "${workflow.name}" (id: ${workflow.id})`);
 
 	// 2. Determine base commit
-	let baseCommit, baseRef;
+	/** @type {string} */
+	let baseCommit;
+	/** @type {string} */
+	let baseRef;
 	if (inputs.baseRef && inputs.baseSha) {
 		baseCommit = inputs.baseSha;
 		baseRef = inputs.baseRef;

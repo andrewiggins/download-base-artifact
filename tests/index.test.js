@@ -41,7 +41,7 @@ function getTestClient() {
 
 const testClient = getTestClient();
 
-/** @type {import('../index').GitHubRepo} */
+/** @type {import('../index.js').GitHubRepo} */
 const testRepo = {
 	owner: "andrewiggins",
 	repo: "download-base-artifact",
