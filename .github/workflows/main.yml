@@ -3,8 +3,8 @@ name: Main
 on:
   workflow_dispatch:
     inputs:
-      all_optional:
-        description: "Make all artifacts optional. Turn on if all run artifacts have expired."
+      regenerate:
+        description: "Just regenerate artifacts. Turn on if all run artifacts have expired."
         type: boolean
         default: false
   pull_request:
@@ -23,8 +23,11 @@ jobs:
         with:
           node-version: 16
       - run: npm ci
+        if: ${{ !inputs.regenerate }}
       - run: npm test
+        if: ${{ !inputs.regenerate }}
       - run: npm run tsc
+        if: ${{ !inputs.regenerate }}
       - run: echo "$GITHUB_RUN_NUMBER 1" > test-artifact.txt
       - run: echo "$GITHUB_RUN_NUMBER 2" > test-artifact-2.txt
       - run: ls -al
@@ -39,12 +42,12 @@ jobs:
         with:
           artifact: "test-artifact.txt"
           path: base
-          required: ${{ !inputs.all_optional }}
+          required: ${{ !inputs.regenerate }}
       - run: ls -al
       - run: ls -al base
-        if: ${{ !inputs.all_optional }}
+        if: ${{ !inputs.regenerate }}
       - run: diff test-artifact.txt base/test-artifact.txt | egrep '[a-zA-z0-9]+' -
-        if: ${{ !inputs.all_optional }}
+        if: ${{ !inputs.regenerate }}
       - uses: actions/upload-artifact@v2
         with:
           name: test-artifact.txt
