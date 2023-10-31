@@ -7,6 +7,7 @@ import {
 	getWorkflowFromRunId,
 	getWorkflowRunForCommit,
 	getArtifact,
+	getGitRef,
 } from "../index.js";
 
 // Mostly copied from: https://github.com/actions/toolkit/blob/cee7d92d1d02e3107c9b1387b9690b89096b67be/packages/github/src/utils.ts#L12
@@ -53,6 +54,20 @@ function getTestClient() {
 
 const testClient = getTestClient();
 
+/** @type {import('../index.js').Logger & { logs: string[] }} */
+const testLogger = {
+	logs: [],
+	warn(msg) {
+		this.logs.push(`[WARN] ${msg}`);
+	},
+	info(msg) {
+		this.logs.push(`[INFO] ${msg}`);
+	},
+	debug(getMsg) {
+		this.logs.push(`[DEBUG] ${getMsg()}`);
+	},
+};
+
 /** @type {import('../index.js').GitHubRepo} */
 const testRepo = {
 	owner: "andrewiggins",
@@ -66,9 +81,18 @@ const gitRef = "refs/heads/master";
 const artifactName = "test-artifact.txt";
 const artifactId = 408992374;
 
-const prBranch = "upgrade-deps-and-node16";
-const prRunId = 3310272485;
-const prSha = "12d4e33eeeb5afb2d99cea6dfa1f6b1ad1caff17";
+const prBranch = "test-branch";
+const prSha = "62722153c751ecd3676c48fb43a42869f39ed9e2";
+const prRunId = 6703640458;
+
+const testTag = "v1";
+const testTagSha = "79bac17752227d20896f47e880706a786df20e5d";
+
+const unknownSha = "9c81cadeed9dfc5a2ae8555046b323bf3be712cf";
+
+test.beforeEach(() => {
+	testLogger.logs = [];
+});
 
 test("getWorkflowFromFile", async () => {
 	const workflow = await getWorkflowFromFile(testClient, testRepo, "main.yml");
@@ -140,7 +164,7 @@ test("getWorkflowRunForCommit with unknown commit", async () => {
 		testClient,
 		testRepo,
 		workflowId,
-		"9c81cadeed9dfc5a2ae8555046b323bf3be712cf",
+		unknownSha,
 		gitRef,
 	);
 
@@ -163,4 +187,70 @@ test("getArtifact not found", async () => {
 		/Not Found/g,
 		"Expected getArtifact to reject if artifact not found",
 	);
+});
+
+test("getGitRef with full branch name", async () => {
+	const [commit, ref] = await getGitRef(
+		testClient,
+		testRepo,
+		`heads/${prBranch}`,
+		testLogger,
+	);
+	assert.equal(commit, prSha);
+	assert.equal(ref, prBranch);
+});
+
+test("getGitRef with full tag name", async () => {
+	const [commit, ref] = await getGitRef(
+		testClient,
+		testRepo,
+		`tags/${testTag}`,
+		testLogger,
+	);
+	assert.equal(commit, testTagSha);
+	assert.equal(ref, undefined);
+});
+
+test("getGitRef with unqualified branch name", async () => {
+	const [commit, ref] = await getGitRef(
+		testClient,
+		testRepo,
+		prBranch,
+		testLogger,
+	);
+	assert.equal(commit, prSha);
+	assert.equal(ref, prBranch);
+});
+
+test("getGitRef with unqualified tag name", async () => {
+	const [commit, ref] = await getGitRef(
+		testClient,
+		testRepo,
+		testTag,
+		testLogger,
+	);
+	assert.equal(commit, testTagSha);
+	assert.equal(ref, undefined);
+});
+
+test("getGitRef with commit sha", async () => {
+	const [commit, ref] = await getGitRef(
+		testClient,
+		testRepo,
+		prSha,
+		testLogger,
+	);
+	assert.equal(commit, prSha);
+	assert.equal(ref, undefined);
+});
+
+test("getGitRef with unknown ref", async () => {
+	const [commit, ref] = await getGitRef(
+		testClient,
+		testRepo,
+		unknownSha,
+		testLogger,
+	);
+	assert.equal(commit, undefined);
+	assert.equal(ref, undefined);
 });

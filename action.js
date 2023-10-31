@@ -13,10 +13,9 @@ import { downloadBaseArtifact } from "./index.js";
 		required =
 			core.getInput("required", { required: false })?.toLowerCase() === "true";
 		const baseRef = core.getInput("baseRef", { required: false });
-		const baseSha = core.getInput("baseSha", { required: false });
 
 		const octokit = github.getOctokit(token);
-		const inputs = { workflow, artifact, path, baseRef, baseSha };
+		const inputs = { workflow, artifact, path, baseRef };
 
 		core.debug("Required: " + required);
 		core.debug("Inputs: " + JSON.stringify(inputs, null, 2));

@@ -4,14 +4,13 @@
 
 For pull requests, this action looks at the branch the pull request is open against, finds the last successful workflow run for that branch, and downloads the artifact for that workflow run. For pushes, this action looks as the commit id for the branch before the push happened, finds a successful workflow run for that commit (falls back to the last successful for the branch if that commit broke the build), and downloads the artifact for that workflow run.
 
-
 ## Usage
 
 This action could be used to:
 
-* Download size metadata about the previous build and compare it against sizes for the current build
-* Download the build output of a previous build to benchmark against the output of the current build
-* Other things I haven't thought of!
+- Download size metadata about the previous build and compare it against sizes for the current build
+- Download the build output of a previous build to benchmark against the output of the current build
+- Other things I haven't thought of!
 
 ```yaml
 name: Compare artifacts
@@ -43,14 +42,22 @@ jobs:
 
 The name of the artifact to download. Required.
 
-### github_token
-
-The GITHUB_TOKEN for the current workflow run (optional)
-
-### workflow
+### workflow (optional)
 
 The workflow file name that generates the desired artifact. Defaults to the current workflow.
 
-### path
+### path (optional)
 
 The path to download the artifact to. Defaults to the current working directory.
+
+### required (optional)
+
+If required, this action will fail if a matching artifact cannot be found. Defaults to false.
+
+### baseRef (optional)
+
+Usually not required as it can be automatically determined for pull request and push events. Defaults to previous commit otherwise. But in case you want to support custom inputs, this is the git ref whose artifact is to be downloaded. For branches prefix branch name with 'heads/'. For tags prefix tag with 'tags/'. Also accepts commit shas.
+
+### github_token (optional)
+
+The GITHUB_TOKEN for the current workflow run
