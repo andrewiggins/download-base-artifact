@@ -9,43 +9,67 @@ import AdmZip from "adm-zip";
  * @param {GitHubActionClient} client
  * @param {GitHubRepo} repo
  * @param {string} ref
+ * @param {Logger} logger
  * @returns {Promise<[string | undefined, string | undefined]>}
  */
-export async function getGitRef(client, repo, ref) {
-	/** @type {string | undefined} */
-	let finalRef = ref;
-	/** @type {string | undefined} */
-	let finalSha;
-
+export async function getGitRef(client, repo, ref, logger) {
 	try {
-		finalSha = await client.rest.git
-			.getRef({
-				...repo,
-				ref: `heads/${ref}`,
-			})
+		const sha = await client.rest.git
+			.getRef({ ...repo, ref })
 			.then((r) => r.data.object.sha);
+
+		// Successfully resolved ref to sha. Return it.
+		if (ref.startsWith("tags/")) {
+			return [sha, undefined];
+		} else {
+			return [sha, ref.replace(/^heads\//, "")];
+		}
 	} catch (e) {
-		finalRef = undefined;
+		logger.info(`Unable to resolve ref as-is: "${ref}"`);
 	}
 
-	// Successfully resolved ref to sha. Return it.
-	if (finalSha) {
-		return [finalSha, finalRef];
+	// Try again prefixing with "heads/" for branch name
+	try {
+		const sha = await client.rest.git
+			.getRef({ ...repo, ref: `heads/${ref}` })
+			.then((r) => r.data.object.sha);
+
+		// Successfully resolved ref to sha. Return it.
+		return [sha, ref];
+	} catch (e) {
+		logger.info(`Unable to resolve ref as branch: "heads/${ref}"`);
+	}
+
+	// Try again prefixing with "tags/" for tag name
+	try {
+		const sha = await client.rest.git
+			.getRef({ ...repo, ref: `tags/${ref}` })
+			.then((r) => r.data.object.sha);
+
+		// Successfully resolved ref to sha. Return it.
+		return [sha, undefined];
+	} catch (e) {
+		logger.info(`Unable to resolve ref as tag: "tags/${ref}"`);
 	}
 
 	// Try resolving ref as a commit
 	try {
-		await client.rest.git.getCommit({
-			...repo,
-			commit_sha: ref,
-		});
+		const sha = await client.rest.git
+			.getCommit({
+				...repo,
+				commit_sha: ref,
+			})
+			.then((r) => r.data.sha);
 
 		// Successfully resolve ref as a commit sha. Return it.
-		return [ref, undefined];
+		return [sha, undefined];
 	} catch {
-		// Do nothing
+		logger.info(`Unable to resolve ref as commit sha: "${ref}"`);
 	}
 
+	logger.warn(
+		`Unable to resolve ref. See above logs for attempted resolutions.`,
+	);
 	return [undefined, undefined];
 }
 
@@ -236,7 +260,7 @@ export async function downloadBaseArtifact(
 	let baseRef;
 
 	if (inputs.baseRef) {
-		const [commit, ref] = await getGitRef(octokit, repo, inputs.baseRef);
+		const [commit, ref] = await getGitRef(octokit, repo, inputs.baseRef, log);
 
 		if (!commit) {
 			throw new Error(
