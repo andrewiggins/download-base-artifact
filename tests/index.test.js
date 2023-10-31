@@ -1,5 +1,8 @@
 import { test } from "uvu";
 import * as assert from "uvu/assert";
+import * as nodeAssert from "node:assert/strict";
+import fs from "fs";
+import path from "path";
 import {
 	getWorkflowFromFile,
 	getWorkflowFromRunId,
@@ -16,6 +19,11 @@ import { Octokit } from "@octokit/core";
 import { restEndpointMethods } from "@octokit/plugin-rest-endpoint-methods";
 import { paginateRest } from "@octokit/plugin-paginate-rest";
 
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+/** @type {(...args: string[]) => string} */
+const p = (...args) => path.join(__dirname, "..", ...args);
+const tokenPath = p(".github_token");
+
 const baseUrl = "https://api.github.com";
 const hc = new HttpClient();
 const agent = hc.getAgent(baseUrl);
@@ -31,6 +39,10 @@ function getTestClient() {
 	if (process.env.GITHUB_TOKEN) {
 		return getOctokit(process.env.GITHUB_TOKEN);
 	} else {
+		if (fs.existsSync(tokenPath)) {
+			return getOctokit(fs.readFileSync(tokenPath, "utf8").trim());
+		}
+
 		const GitHub = Octokit.plugin(restEndpointMethods, paginateRest).defaults(
 			defaults
 		);
@@ -47,40 +59,45 @@ const testRepo = {
 	repo: "download-base-artifact",
 };
 
+const workflowId = 1827281;
+const runId = 3310300652;
+const commitSha = "6e60998db346a1acaee4b470b4142d00dfc979ee";
+const gitRef = "refs/heads/master";
+const artifactName = "test-artifact.txt";
+const artifactId = 408992374;
+
+const prBranch = "upgrade-deps-and-node16";
+const prRunId = 3310272485;
+const prSha = "12d4e33eeeb5afb2d99cea6dfa1f6b1ad1caff17";
+
 test("getWorkflowFromFile", async () => {
 	const workflow = await getWorkflowFromFile(testClient, testRepo, "main.yml");
-
-	assert.equal(workflow.id, 1827281, "Correct workflow ID is returned");
+	assert.equal(workflow.id, workflowId, "Correct workflow ID is returned");
 });
 
 test("getWorkflowFromFile NotFound", async () => {
-	try {
-		await getWorkflowFromFile(testClient, testRepo, "failure");
-		assert.unreachable("Did not throw expected error.");
-	} catch (e) {
-		assert.ok(
-			e.message.match(/Could not find workflow/g),
-			"Throws friendly error if workflow is not found"
-		);
-	}
+	await nodeAssert.rejects(
+		() => getWorkflowFromFile(testClient, testRepo, "failure"),
+		/Could not find workflow/g,
+		"Expected getWorkflowFromFile to Throw friendly error if workflow is not found"
+	);
 });
 
 test("getWorkflowFromRunId", async () => {
-	const workflow = await getWorkflowFromRunId(testClient, testRepo, 162490580);
-
-	assert.equal(workflow.id, 1827281, "Correct workflow ID is returned");
+	const workflow = await getWorkflowFromRunId(testClient, testRepo, runId);
+	assert.equal(workflow.id, workflowId, "Correct workflow ID is returned");
 });
 
 test("getWorkflowRunForCommit for push commit run", async (t) => {
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
 		testRepo,
-		1827281,
-		"8c81cadeed9dfc5a2ae8555046b323bf3be712ce",
-		"refs/heads/master"
+		workflowId,
+		commitSha,
+		gitRef
 	);
 
-	assert.equal(commitRun.id, 162658683, "Correct run ID is returned");
+	assert.equal(commitRun.id, runId, "Correct run ID is returned");
 	assert.ok(lkgRun, "Returns a valid lkg run");
 });
 
@@ -89,11 +106,11 @@ test("getWorkflowRunForCommit for pull_request commit run (e.g. PR into PR)", as
 		testClient,
 		testRepo,
 		1827281,
-		"4f7618a381231923ebd37932ce43f588b74d3eb0",
-		"get-workflow-run"
+		prSha,
+		prBranch
 	);
 
-	assert.equal(commitRun.id, 163536999, "Correct run ID is returned");
+	assert.equal(commitRun.id, prRunId, "Correct run ID is returned");
 	assert.ok(lkgRun, "Returns a valid lkg run");
 });
 
@@ -101,7 +118,7 @@ test("getWorkflowRunForCommit with bad ref", async () => {
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
 		testRepo,
-		1827281,
+		workflowId,
 		"8c81cadeed9dfc5a2ae8555046b323bf3be712ce",
 		"refs/heads/fake-branch"
 	);
@@ -117,9 +134,9 @@ test("getWorkflowRunForCommit with unknown commit", async () => {
 	const [commitRun, lkgRun] = await getWorkflowRunForCommit(
 		testClient,
 		testRepo,
-		1827281,
+		workflowId,
 		"9c81cadeed9dfc5a2ae8555046b323bf3be712cf",
-		"refs/heads/master"
+		gitRef
 	);
 
 	assert.not.ok(commitRun, "Returns undefined if not found on branch");
@@ -127,28 +144,15 @@ test("getWorkflowRunForCommit with unknown commit", async () => {
 });
 
 test("getArtifact", async () => {
-	const artifact = await getArtifact(
-		testClient,
-		testRepo,
-		163653716,
-		"test-artifact.txt"
-	);
-
-	assert.equal(artifact.id, 10721454, "Returns  if not found on branch");
+	const artifact = await getArtifact(testClient, testRepo, runId, artifactName);
+	assert.equal(artifact.id, artifactId);
 });
 
 test("getArtifact not found", async () => {
-	const artifact = await getArtifact(
-		testClient,
-		testRepo,
-		163653716,
-		"not-found.txt"
-	);
-
-	assert.equal(
-		artifact,
-		undefined,
-		"Returns undefined if artifact is not found"
+	await nodeAssert.rejects(
+		() => getArtifact(testClient, testRepo, 163653716, "not-found.txt"),
+		/Not Found/g,
+		"Expected getArtifact to reject if artifact not found"
 	);
 });
 
