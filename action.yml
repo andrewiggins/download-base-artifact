@@ -28,5 +28,5 @@ inputs:
     description: "The git commit SHA whose artifact for the given workflow should be downloaded"
     required: false
 runs:
-  using: "node16"
+  using: "node20"
   main: "dist/action.js"
