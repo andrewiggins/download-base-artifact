@@ -31576,7 +31576,7 @@ async function getWorkflowFromFile(client, repo, file) {
 	} catch (e) {
 		if (e.status == 404) {
 			throw new Error(
-				`Could not find workflow using file "${file}".\n\nFull request error details:\n${e}`
+				`Could not find workflow using file "${file}".\n\nFull request error details:\n${e}`,
 			);
 		} else {
 			throw e;
@@ -31597,7 +31597,7 @@ async function getWorkflowRunForCommit(
 	repo,
 	workflow_id,
 	commit,
-	ref
+	ref,
 ) {
 	/** @type {WorkflowRunData | undefined} */
 	let runForCommit;
@@ -31618,7 +31618,7 @@ async function getWorkflowRunForCommit(
 	paging: for await (const page of iterator) {
 		if (page.status > 299) {
 			throw new Error(
-				`Non-success error code returned for workflow runs: ${page.status}`
+				`Non-success error code returned for workflow runs: ${page.status}`,
 			);
 		}
 
@@ -31662,7 +31662,7 @@ async function getArtifact(client, repo, run_id, artifactName) {
 	for await (let page of iterator) {
 		if (page.status > 299) {
 			throw new Error(
-				`Non-success error code returned for listing artifacts: ${page.status}`
+				`Non-success error code returned for listing artifacts: ${page.status}`,
 			);
 		}
 
@@ -31702,20 +31702,20 @@ async function downloadBaseArtifact(
 	octokit,
 	context,
 	inputs,
-	log = defaultLogger
+	log = defaultLogger,
 ) {
 	const repo = context.repo;
 
 	// 0. Validate inputs
 	if (inputs.baseRef && !inputs.baseSha) {
 		throw new Error(
-			`baseRef and baseSha inputs must both be provided. Only received baseRef.`
+			`baseRef and baseSha inputs must both be provided. Only received baseRef.`,
 		);
 	}
 
 	if (!inputs.baseRef && inputs.baseSha) {
 		throw new Error(
-			`baseRef and baseSha inputs must both be provided. Only received baseRef.`
+			`baseRef and baseSha inputs must both be provided. Only received baseRef.`,
 		);
 	}
 
@@ -31761,7 +31761,7 @@ async function downloadBaseArtifact(
 		log.info(`Base commit of pull request is ${baseCommit}`);
 	} else if (!context.sha) {
 		throw new Error(
-			`No commit sha in action context (context.sha: "${context.sha}"). Current eventName is ${context.eventName}.`
+			`No commit sha in action context (context.sha: "${context.sha}"). Current eventName is ${context.eventName}.`,
 		);
 	} else {
 		const commit = await octokit.rest.git
@@ -31773,7 +31773,7 @@ async function downloadBaseArtifact(
 
 		if (commit.parents.length == 0) {
 			throw new Error(
-				`No parent commits to use as a base commit. Current commit: ${context.sha}`
+				`No parent commits to use as a base commit. Current commit: ${context.sha}`,
 			);
 		}
 
@@ -31781,7 +31781,7 @@ async function downloadBaseArtifact(
 		baseRef = context.ref;
 
 		log.info(
-			`Unrecognized eventName (${context.eventName}). Using first parent commit (${baseCommit}) of current workflow commit (${context.sha})`
+			`Unrecognized eventName (${context.eventName}). Using first parent commit (${baseCommit}) of current workflow commit (${context.sha})`,
 		);
 	}
 
@@ -31791,7 +31791,7 @@ async function downloadBaseArtifact(
 		repo,
 		workflow.id,
 		baseCommit,
-		baseRef
+		baseRef,
 	);
 
 	log.debug(() => `Commit Run: ${JSON.stringify(commitRun, null, 2)}`);
@@ -31832,7 +31832,7 @@ async function downloadBaseArtifact(
 
 	const workflowRunName = `${workflow.name}#${workflowRun.run_number}`;
 	log.info(
-		`Using ${workflowRunName} (id: ${workflowRun.id}) as base workflow run`
+		`Using ${workflowRunName} (id: ${workflowRun.id}) as base workflow run`,
 	);
 
 	// 4. Download artifact for base workflow
@@ -31840,7 +31840,7 @@ async function downloadBaseArtifact(
 		octokit,
 		repo,
 		workflowRun.id,
-		inputs.artifact
+		inputs.artifact,
 	);
 
 	if (!artifact) {
@@ -31852,7 +31852,7 @@ async function downloadBaseArtifact(
 
 	if (artifact.expired) {
 		throw new Error(
-			`Artifact "${artifact.name}" for workflow run ${workflowRunName} is expired. Please re-run workflow to regenerate artifacts.`
+			`Artifact "${artifact.name}" for workflow run ${workflowRunName} is expired. Please re-run workflow to regenerate artifacts.`,
 		);
 	}
 
@@ -31917,7 +31917,7 @@ async function downloadBaseArtifact(
 			core.setFailed(e.message);
 		} else {
 			core.info(
-				`Error was thrown but "required" input is set to false so ignoring it. See below for error.`
+				`Error was thrown but "required" input is set to false so ignoring it. See below for error.`,
 			);
 			core.info(e.toString());
 		}

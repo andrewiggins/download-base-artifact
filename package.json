@@ -8,7 +8,8 @@
     "prepare": "husky install",
     "build": "rollup -c ./rollup.config.js",
     "test": "node --test tests",
-    "tsc": "tsc -p jsconfig.json"
+    "tsc": "tsc -p jsconfig.json",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,yml,json}\""
   },
   "repository": {
     "type": "git",
@@ -41,7 +42,7 @@
     "@types/adm-zip": "^0.5.3",
     "husky": "^8.0.1",
     "lint-staged": "^15.0.2",
-    "prettier": "^2.7.1",
+    "prettier": "^3.0.3",
     "rollup": "^4.1.6",
     "rollup-plugin-node-externals": "^6.1.2",
     "typescript": "^5.2.2"

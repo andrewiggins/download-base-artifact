@@ -41,7 +41,7 @@ import { downloadBaseArtifact } from "./index.js";
 			core.setFailed(e.message);
 		} else {
 			core.info(
-				`Error was thrown but "required" input is set to false so ignoring it. See below for error.`
+				`Error was thrown but "required" input is set to false so ignoring it. See below for error.`,
 			);
 			core.info(e.toString());
 		}

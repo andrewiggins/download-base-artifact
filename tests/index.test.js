@@ -44,7 +44,7 @@ function getTestClient() {
 		}
 
 		const GitHub = Octokit.plugin(restEndpointMethods, paginateRest).defaults(
-			defaults
+			defaults,
 		);
 
 		return new GitHub();
@@ -79,7 +79,7 @@ test("getWorkflowFromFile NotFound", async () => {
 	await assert.rejects(
 		() => getWorkflowFromFile(testClient, testRepo, "failure"),
 		/Could not find workflow/g,
-		"Expected getWorkflowFromFile to Throw friendly error if workflow is not found"
+		"Expected getWorkflowFromFile to Throw friendly error if workflow is not found",
 	);
 });
 
@@ -94,7 +94,7 @@ test("getWorkflowRunForCommit for push commit run", async (t) => {
 		testRepo,
 		workflowId,
 		commitSha,
-		gitRef
+		gitRef,
 	);
 
 	assert.equal(commitRun.id, runId, "Correct run ID is returned");
@@ -107,7 +107,7 @@ test("getWorkflowRunForCommit for pull_request commit run (e.g. PR into PR)", as
 		testRepo,
 		1827281,
 		prSha,
-		prBranch
+		prBranch,
 	);
 
 	assert.equal(commitRun.id, prRunId, "Correct run ID is returned");
@@ -120,18 +120,18 @@ test("getWorkflowRunForCommit with bad ref", async () => {
 		testRepo,
 		workflowId,
 		"8c81cadeed9dfc5a2ae8555046b323bf3be712ce",
-		"refs/heads/fake-branch"
+		"refs/heads/fake-branch",
 	);
 
 	assert.equal(
 		commitRun,
 		undefined,
-		"Returns undefined for commitRun if ref doesn't exist"
+		"Returns undefined for commitRun if ref doesn't exist",
 	);
 	assert.equal(
 		lkgRun,
 		undefined,
-		"Returns undefined for lkgRun if ref doesn't exist"
+		"Returns undefined for lkgRun if ref doesn't exist",
 	);
 });
 
@@ -141,13 +141,13 @@ test("getWorkflowRunForCommit with unknown commit", async () => {
 		testRepo,
 		workflowId,
 		"9c81cadeed9dfc5a2ae8555046b323bf3be712cf",
-		gitRef
+		gitRef,
 	);
 
 	assert.equal(
 		commitRun,
 		undefined,
-		"Returns undefined if not found on branch"
+		"Returns undefined if not found on branch",
 	);
 	assert.ok(lkgRun, "Returns LKG run event if commit can't be found");
 });
@@ -161,6 +161,6 @@ test("getArtifact not found", async () => {
 	await assert.rejects(
 		() => getArtifact(testClient, testRepo, 163653716, "not-found.txt"),
 		/Not Found/g,
-		"Expected getArtifact to reject if artifact not found"
+		"Expected getArtifact to reject if artifact not found",
 	);
 });
