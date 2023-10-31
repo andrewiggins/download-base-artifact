@@ -18,10 +18,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version-file: package.json
       - run: npm ci
         if: ${{ !inputs.regenerate }}
       - run: npm test
@@ -48,11 +48,11 @@ jobs:
         if: ${{ !inputs.regenerate }}
       - run: diff test-artifact.txt base/test-artifact.txt | egrep '[a-zA-z0-9]+' -
         if: ${{ !inputs.regenerate }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: test-artifact.txt
           path: test-artifact.txt
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: test-artifact-2.txt
           path: test-artifact-2.txt
