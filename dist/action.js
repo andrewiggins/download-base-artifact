@@ -31543,6 +31543,50 @@ var AdmZip = /*@__PURE__*/getDefaultExportFromCjs(admZip);
 /**
  * @param {GitHubActionClient} client
  * @param {GitHubRepo} repo
+ * @param {string} ref
+ * @returns {Promise<[string | undefined, string | undefined]>}
+ */
+async function getGitRef(client, repo, ref) {
+	/** @type {string | undefined} */
+	let finalRef = ref;
+	/** @type {string | undefined} */
+	let finalSha;
+
+	try {
+		finalSha = await client.rest.git
+			.getRef({
+				...repo,
+				ref: `heads/${ref}`,
+			})
+			.then((r) => r.data.object.sha);
+	} catch (e) {
+		finalRef = undefined;
+	}
+
+	// Successfully resolved ref to sha. Return it.
+	if (finalSha) {
+		return [finalSha, finalRef];
+	}
+
+	// Try resolving ref as a commit
+	try {
+		await client.rest.git.getCommit({
+			...repo,
+			commit_sha: ref,
+		});
+
+		// Successfully resolve ref as a commit sha. Return it.
+		return [ref, undefined];
+	} catch {
+		// Do nothing
+	}
+
+	return [undefined, undefined];
+}
+
+/**
+ * @param {GitHubActionClient} client
+ * @param {GitHubRepo} repo
  * @param {number} run_id
  * @returns {Promise<WorkflowData>}
  */
@@ -31689,7 +31733,7 @@ const defaultLogger = {
 /**
  * @typedef {ReturnType<typeof import('@actions/github').getOctokit>} GitHubActionClient
  * @typedef {typeof import('@actions/github').context} GitHubActionContext
- * @typedef {{ workflow?: string; artifact: string; path?: string; baseRef?: string; baseSha?: string; }} Inputs
+ * @typedef {{ workflow?: string; artifact: string; path?: string; baseRef?: string; }} Inputs
  * @typedef {{ warn(msg: string): void; info(msg: string): void; debug(getMsg: () => string): void; }} Logger
  * @typedef {GitHubActionContext["payload"]["pull_request"]} PRPayload
  *
@@ -31705,19 +31749,6 @@ async function downloadBaseArtifact(
 	log = defaultLogger,
 ) {
 	const repo = context.repo;
-
-	// 0. Validate inputs
-	if (inputs.baseRef && !inputs.baseSha) {
-		throw new Error(
-			`baseRef and baseSha inputs must both be provided. Only received baseRef.`,
-		);
-	}
-
-	if (!inputs.baseRef && inputs.baseSha) {
-		throw new Error(
-			`baseRef and baseSha inputs must both be provided. Only received baseRef.`,
-		);
-	}
 
 	// 1. Determine workflow
 	/** @type {WorkflowData} */
@@ -31736,14 +31767,26 @@ async function downloadBaseArtifact(
 	// 2. Determine base commit
 	/** @type {string} */
 	let baseCommit;
-	/** @type {string} */
+	/** @type {string | undefined} */
 	let baseRef;
-	if (inputs.baseRef && inputs.baseSha) {
-		baseCommit = inputs.baseSha;
-		baseRef = inputs.baseRef;
 
-		log.info(`Using inputs.baseRef: ${inputs.baseRef}`);
-		log.info(`Using inputs.baseSha: ${inputs.baseSha}`);
+	if (inputs.baseRef) {
+		const [commit, ref] = await getGitRef(octokit, repo, inputs.baseRef);
+
+		if (!commit) {
+			throw new Error(
+				`Unable to resolve base commit with inputs.baseRef: "${inputs.baseRef}"`,
+			);
+		}
+
+		baseCommit = commit;
+		baseRef = ref;
+
+		if (ref) {
+			log.info(`Resolved head of "${baseRef}" to commit ${baseCommit}`);
+		} else {
+			log.info(`Using base commit: ${baseCommit}`);
+		}
 	} else if (context.eventName == "push") {
 		baseCommit = context.payload.before;
 		baseRef = context.payload.ref;
@@ -31889,10 +31932,9 @@ async function downloadBaseArtifact(
 		required =
 			core.getInput("required", { required: false })?.toLowerCase() === "true";
 		const baseRef = core.getInput("baseRef", { required: false });
-		const baseSha = core.getInput("baseSha", { required: false });
 
 		const octokit = github.getOctokit(token);
-		const inputs = { workflow, artifact, path, baseRef, baseSha };
+		const inputs = { workflow, artifact, path, baseRef };
 
 		core.debug("Required: " + required);
 		core.debug("Inputs: " + JSON.stringify(inputs, null, 2));

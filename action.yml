@@ -22,10 +22,7 @@ inputs:
     description: "If required, this action will fail if a matching artifact cannot be found"
     required: false
   baseRef:
-    description: "The git ref that contains the base commit whose artifact is to be downloaded"
-    required: false
-  baseSha:
-    description: "The git commit SHA whose artifact for the given workflow should be downloaded"
+    description: "The git ref that contains the base commit whose artifact is to be downloaded. The HEAD of the branch will be used if baseSha is not provided."
     required: false
 runs:
   using: "node20"
