@@ -7,7 +7,7 @@
   "scripts": {
     "prepare": "husky install",
     "build": "rollup -c ./rollup.config.js",
-    "test": "node tests/index.test.js",
+    "test": "node --test tests",
     "tsc": "tsc -p jsconfig.json"
   },
   "repository": {
@@ -44,8 +44,7 @@
     "prettier": "^2.7.1",
     "rollup": "^4.1.6",
     "rollup-plugin-node-externals": "^6.1.2",
-    "typescript": "^5.2.2",
-    "uvu": "^0.5.6"
+    "typescript": "^5.2.2"
   },
   "volta": {
     "node": "20.9.0"

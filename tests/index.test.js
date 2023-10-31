@@ -1,8 +1,7 @@
-import { test } from "uvu";
-import * as assert from "uvu/assert";
-import * as nodeAssert from "node:assert/strict";
-import fs from "fs";
-import path from "path";
+import * as assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { test } from "node:test";
 import {
 	getWorkflowFromFile,
 	getWorkflowFromRunId,
@@ -40,6 +39,7 @@ function getTestClient() {
 		return getOctokit(process.env.GITHUB_TOKEN);
 	} else {
 		if (fs.existsSync(tokenPath)) {
+			console.log(`Using token from ${tokenPath}`);
 			return getOctokit(fs.readFileSync(tokenPath, "utf8").trim());
 		}
 
@@ -76,7 +76,7 @@ test("getWorkflowFromFile", async () => {
 });
 
 test("getWorkflowFromFile NotFound", async () => {
-	await nodeAssert.rejects(
+	await assert.rejects(
 		() => getWorkflowFromFile(testClient, testRepo, "failure"),
 		/Could not find workflow/g,
 		"Expected getWorkflowFromFile to Throw friendly error if workflow is not found"
@@ -123,11 +123,16 @@ test("getWorkflowRunForCommit with bad ref", async () => {
 		"refs/heads/fake-branch"
 	);
 
-	assert.not.ok(
+	assert.equal(
 		commitRun,
+		undefined,
 		"Returns undefined for commitRun if ref doesn't exist"
 	);
-	assert.not.ok(lkgRun, "Returns undefined for lkgRun if ref doesn't exist");
+	assert.equal(
+		lkgRun,
+		undefined,
+		"Returns undefined for lkgRun if ref doesn't exist"
+	);
 });
 
 test("getWorkflowRunForCommit with unknown commit", async () => {
@@ -139,7 +144,11 @@ test("getWorkflowRunForCommit with unknown commit", async () => {
 		gitRef
 	);
 
-	assert.not.ok(commitRun, "Returns undefined if not found on branch");
+	assert.equal(
+		commitRun,
+		undefined,
+		"Returns undefined if not found on branch"
+	);
 	assert.ok(lkgRun, "Returns LKG run event if commit can't be found");
 });
 
@@ -149,11 +158,9 @@ test("getArtifact", async () => {
 });
 
 test("getArtifact not found", async () => {
-	await nodeAssert.rejects(
+	await assert.rejects(
 		() => getArtifact(testClient, testRepo, 163653716, "not-found.txt"),
 		/Not Found/g,
 		"Expected getArtifact to reject if artifact not found"
 	);
 });
-
-test.run();
